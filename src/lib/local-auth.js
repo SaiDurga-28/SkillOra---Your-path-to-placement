@@ -16,7 +16,32 @@ function createToken() {
   return `local-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
+async function postAuth(path, data) {
+  const response = await fetch(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+    throw new Error(error?.message ?? "Authentication failed.");
+  }
+
+  return response.json();
+}
+
+function isBackendUnavailable(error) {
+  return /Failed to fetch|NetworkError|Load failed|Backend|Not found|Server error/i.test(error?.message ?? "");
+}
+
 export async function registerLocalUser({ name, email, password }) {
+  try {
+    return await postAuth("/api/auth/register", { name, email, password });
+  } catch (error) {
+    if (!isBackendUnavailable(error)) throw error;
+  }
+
   const users = readUsers();
   const normalizedEmail = email.trim().toLowerCase();
 
@@ -40,6 +65,12 @@ export async function registerLocalUser({ name, email, password }) {
 }
 
 export async function loginLocalUser({ email, password }) {
+  try {
+    return await postAuth("/api/auth/login", { email, password });
+  } catch (error) {
+    if (!isBackendUnavailable(error) && !/Invalid email or password/i.test(error?.message ?? "")) throw error;
+  }
+
   const normalizedEmail = email.trim().toLowerCase();
   const account = readUsers().find(
     (user) => user.email === normalizedEmail && user.password === password,

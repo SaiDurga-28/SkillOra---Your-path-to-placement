@@ -96,14 +96,112 @@ function makeSkill(skill, index, category) {
   return {
     id: `${category}-${index}-${skill.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
     name: skill,
-    description: `Practice ${skill} from the uploaded JD with examples, questions, and interview notes.`,
+    description: `Learn ${skill} through docs, guided lessons, and focused interview-ready practice.`,
     priority: index < 3 ? "high" : index < 6 ? "medium" : "low",
-    resources: [
-      { title: `${skill} learning roadmap`, url: `https://www.google.com/search?q=${encodeURIComponent(`${skill} interview preparation`)}` },
-      { title: `${skill} practice`, url: `https://www.google.com/search?q=${encodeURIComponent(`${skill} practice problems`)}` },
-    ],
+    resources: resourcesForSkill(skill),
     completed: false,
   };
+}
+
+function resourcesForSkill(skill) {
+  const known = {
+    React: [
+      ["React docs", "https://react.dev/learn"],
+      ["React practice", "https://www.freecodecamp.org/news/tag/react/"],
+      ["Interview questions", "https://www.greatfrontend.com/questions/react"],
+    ],
+    JavaScript: [
+      ["MDN JavaScript", "https://developer.mozilla.org/en-US/docs/Web/JavaScript"],
+      ["JavaScript.info", "https://javascript.info/"],
+      ["Practice problems", "https://www.freecodecamp.org/learn/javascript-algorithms-and-data-structures-v8/"],
+    ],
+    "Node.js": [
+      ["Node.js docs", "https://nodejs.org/en/learn"],
+      ["Express guide", "https://expressjs.com/en/guide/routing.html"],
+      ["Backend practice", "https://roadmap.sh/nodejs"],
+    ],
+    Express: [
+      ["Express routing", "https://expressjs.com/en/guide/routing.html"],
+      ["Express middleware", "https://expressjs.com/en/guide/using-middleware.html"],
+      ["Node backend path", "https://roadmap.sh/nodejs"],
+    ],
+    MongoDB: [
+      ["MongoDB University", "https://learn.mongodb.com/"],
+      ["MongoDB Node.js driver", "https://www.mongodb.com/docs/drivers/node/current/"],
+      ["MongoDB CRUD", "https://www.mongodb.com/docs/manual/crud/"],
+    ],
+    Python: [
+      ["Python tutorial", "https://docs.python.org/3/tutorial/"],
+      ["freeCodeCamp Python", "https://www.freecodecamp.org/learn/scientific-computing-with-python/"],
+      ["Python practice", "https://exercism.org/tracks/python"],
+    ],
+    Java: [
+      ["Java tutorials", "https://dev.java/learn/"],
+      ["Java practice", "https://exercism.org/tracks/java"],
+      ["Java interview prep", "https://www.baeldung.com/java-interview-questions"],
+    ],
+    SQL: [
+      ["SQL tutorial", "https://www.w3schools.com/sql/"],
+      ["PostgreSQL docs", "https://www.postgresql.org/docs/current/tutorial.html"],
+      ["SQL practice", "https://sqlbolt.com/"],
+    ],
+    "Data Structures": [
+      ["DSA guide", "https://www.geeksforgeeks.org/data-structures/"],
+      ["Visual learning", "https://visualgo.net/en"],
+      ["LeetCode practice", "https://leetcode.com/problemset/"],
+    ],
+    Algorithms: [
+      ["Algorithms guide", "https://www.geeksforgeeks.org/fundamentals-of-algorithms/"],
+      ["Visualgo", "https://visualgo.net/en"],
+      ["Practice", "https://leetcode.com/problemset/"],
+    ],
+    "System Design": [
+      ["System design primer", "https://github.com/donnemartin/system-design-primer"],
+      ["Design basics", "https://roadmap.sh/system-design"],
+      ["Interview guide", "https://www.educative.io/blog/system-design-interview"],
+    ],
+    HTML: [
+      ["MDN HTML", "https://developer.mozilla.org/en-US/docs/Web/HTML"],
+      ["HTML forms", "https://developer.mozilla.org/en-US/docs/Learn/Forms"],
+      ["Practice", "https://www.freecodecamp.org/learn/2022/responsive-web-design/"],
+    ],
+    CSS: [
+      ["MDN CSS", "https://developer.mozilla.org/en-US/docs/Web/CSS"],
+      ["CSS layout", "https://developer.mozilla.org/en-US/docs/Learn/CSS/CSS_layout"],
+      ["Flexbox practice", "https://flexboxfroggy.com/"],
+    ],
+    "Tailwind CSS": [
+      ["Tailwind docs", "https://tailwindcss.com/docs/installation/using-vite"],
+      ["Utility-first basics", "https://tailwindcss.com/docs/styling-with-utility-classes"],
+      ["Components", "https://ui.shadcn.com/docs/components"],
+    ],
+    Git: [
+      ["Git book", "https://git-scm.com/book/en/v2"],
+      ["GitHub skills", "https://skills.github.com/"],
+      ["Branching practice", "https://learngitbranching.js.org/"],
+    ],
+    Testing: [
+      ["Testing Library", "https://testing-library.com/docs/react-testing-library/intro/"],
+      ["Vitest guide", "https://vitest.dev/guide/"],
+      ["Testing patterns", "https://kentcdodds.com/blog/common-mistakes-with-react-testing-library"],
+    ],
+    Communication: [
+      ["STAR method", "https://www.themuse.com/advice/star-interview-method"],
+      ["Behavioral prep", "https://www.indeed.com/career-advice/interviewing/how-to-use-the-star-interview-response-technique"],
+      ["Presentation skills", "https://www.coursera.org/articles/presentation-skills"],
+    ],
+    "Problem Solving": [
+      ["Problem solving guide", "https://www.freecodecamp.org/news/how-to-solve-coding-problems/"],
+      ["LeetCode practice", "https://leetcode.com/problemset/"],
+      ["HackerRank practice", "https://www.hackerrank.com/domains/tutorials/10-days-of-javascript"],
+    ],
+  };
+
+  return (known[skill] ?? [
+    ["Developer roadmaps", "https://roadmap.sh/"],
+    ["freeCodeCamp practice", "https://www.freecodecamp.org/learn/"],
+    ["MDN web docs", "https://developer.mozilla.org/en-US/docs/Learn"],
+  ]).map(([title, url]) => ({ title, url }));
 }
 
 export function buildRoadmap(skills, estimatedDays) {

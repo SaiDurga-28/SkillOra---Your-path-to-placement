@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { useGetRoadmap, useUpdateProgress, getGetRoadmapQueryKey, getListProgressQueryKey } from "@/api";
+import { useGetRoadmap, useUpdateProgress, getGetRoadmapQueryKey, getListProgressQueryKey, getGetDashboardSummaryQueryKey, getGetSkillBreakdownQueryKey, getGetWeeklyProgressQueryKey } from "@/api";
 import { useQueryClient } from "@tanstack/react-query";
 const categoryIcon = {
     technical: Code,
@@ -43,6 +43,9 @@ export default function RoadmapPage() {
             onSuccess: () => {
                 queryClient.invalidateQueries({ queryKey: getGetRoadmapQueryKey(id) });
                 queryClient.invalidateQueries({ queryKey: getListProgressQueryKey() });
+                queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
+                queryClient.invalidateQueries({ queryKey: getGetSkillBreakdownQueryKey() });
+                queryClient.invalidateQueries({ queryKey: getGetWeeklyProgressQueryKey() });
                 toast({
                     title: !currentCompleted ? "Skill completed!" : "Skill unmarked",
                     description: !currentCompleted ? "Great progress! Keep it up." : "Skill marked as incomplete.",

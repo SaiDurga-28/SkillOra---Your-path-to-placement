@@ -1,6 +1,6 @@
 import http from "node:http";
 import crypto from "node:crypto";
-import { readDb, writeDb, getDbFilePath } from "./db.js";
+import { readDb, writeDb, getDbLocation } from "./db.js";
 import { analyzeJobWithAi, evaluateInterviewAnswerLocally, evaluateInterviewAnswerWithAi, generateAssessmentQuestionsWithAi, generateInterviewQuestionsWithAi } from "./openai.js";
 
 const PORT = Number(process.env.PORT || 3001);
@@ -48,13 +48,13 @@ async function handle(req, res) {
     if (url.pathname === "/api/health") {
       return sendJson(res, 200, {
         ok: true,
-        db: getDbFilePath(),
+        db: getDbLocation(),
         ai: Boolean(process.env.OPENAI_API_KEY),
       });
     }
 
     if (url.pathname === "/api/jobs" && req.method === "GET") {
-      const db = readDb();
+      const db = await readDb();
       const userEmail = userEmailFrom(req);
       return sendJson(res, 200, db.jobs.filter((job) => job.userEmail === userEmail));
     }
@@ -74,9 +74,9 @@ async function handle(req, res) {
         createdAt: new Date().toISOString(),
         ...analysis,
       };
-      const db = readDb();
+      const db = await readDb();
       db.jobs.push(job);
-      writeDb(db);
+      await writeDb(db);
       return sendJson(res, 201, job);
     }
 
@@ -105,18 +105,18 @@ async function handle(req, res) {
       const body = await readBody(req);
       const email = String(body.email || "").trim().toLowerCase();
       if (!email || !body.password || !body.name) return sendJson(res, 400, { message: "Name, email, and password are required." });
-      const db = readDb();
+      const db = await readDb();
       if (db.users.some((user) => user.email === email)) return sendJson(res, 409, { message: "Account already exists." });
       const user = { id: crypto.randomUUID(), name: body.name.trim(), email, createdAt: new Date().toISOString() };
       db.users.push({ ...user, password: body.password });
-      writeDb(db);
+      await writeDb(db);
       return sendJson(res, 201, { token: `server-${crypto.randomUUID()}`, user });
     }
 
     if (url.pathname === "/api/auth/login" && req.method === "POST") {
       const body = await readBody(req);
       const email = String(body.email || "").trim().toLowerCase();
-      const account = readDb().users.find((user) => user.email === email && user.password === body.password);
+      const account = (await readDb()).users.find((user) => user.email === email && user.password === body.password);
       if (!account) return sendJson(res, 401, { message: "Invalid email or password." });
       const { password, ...user } = account;
       return sendJson(res, 200, { token: `server-${crypto.randomUUID()}`, user });
@@ -130,6 +130,6 @@ async function handle(req, res) {
 
 http.createServer(handle).listen(PORT, () => {
   console.log(`SkillOra API running at http://localhost:${PORT}`);
-  console.log(`JSON DB: ${getDbFilePath()}`);
+  console.log(`DB: ${getDbLocation()}`);
   console.log(`AI: ${process.env.OPENAI_API_KEY ? "OpenAI enabled" : "local fallback enabled"}`);
 });

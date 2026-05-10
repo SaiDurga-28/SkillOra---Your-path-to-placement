@@ -237,7 +237,7 @@ function makeSkill(skill, index, category) {
   return {
     id: `${category}-${index}-${skill.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
     name: skill,
-    description: `Build confidence with ${skill} through focused practice and interview-ready examples.`,
+    description: `Learn ${skill} through docs, guided lessons, and focused interview-ready practice.`,
     priority: index < 3 ? "high" : index < 6 ? "medium" : "low",
     resources: resourcesForSkill(skill),
     completed: false,
@@ -262,10 +262,30 @@ function resourcesForSkill(skill) {
       ["Express guide", "https://expressjs.com/en/guide/routing.html"],
       ["Backend practice", "https://roadmap.sh/nodejs"],
     ],
+    Express: [
+      ["Express routing", "https://expressjs.com/en/guide/routing.html"],
+      ["Express middleware", "https://expressjs.com/en/guide/using-middleware.html"],
+      ["Node backend path", "https://roadmap.sh/nodejs"],
+    ],
     "REST APIs": [
       ["REST guide", "https://restfulapi.net/"],
       ["MDN HTTP", "https://developer.mozilla.org/en-US/docs/Web/HTTP"],
       ["API practice", "https://www.postman.com/what-is-an-api/"],
+    ],
+    MongoDB: [
+      ["MongoDB University", "https://learn.mongodb.com/"],
+      ["MongoDB Node.js driver", "https://www.mongodb.com/docs/drivers/node/current/"],
+      ["MongoDB CRUD", "https://www.mongodb.com/docs/manual/crud/"],
+    ],
+    Python: [
+      ["Python tutorial", "https://docs.python.org/3/tutorial/"],
+      ["freeCodeCamp Python", "https://www.freecodecamp.org/learn/scientific-computing-with-python/"],
+      ["Python practice", "https://exercism.org/tracks/python"],
+    ],
+    Java: [
+      ["Java tutorials", "https://dev.java/learn/"],
+      ["Java practice", "https://exercism.org/tracks/java"],
+      ["Java interview prep", "https://www.baeldung.com/java-interview-questions"],
     ],
     SQL: [
       ["SQL tutorial", "https://www.w3schools.com/sql/"],
@@ -340,10 +360,29 @@ function resourcesForSkill(skill) {
   };
 
   return (known[skill] ?? [
-    ["Developer roadmap", "https://roadmap.sh/frontend"],
+    ["Developer roadmaps", "https://roadmap.sh/"],
     ["freeCodeCamp practice", "https://www.freecodecamp.org/learn/"],
     ["MDN web docs", "https://developer.mozilla.org/en-US/docs/Learn"],
   ]).map(([title, url]) => ({ title, url }));
+}
+
+function hasSearchResource(skill) {
+  return (skill.resources ?? []).some((resource) => {
+    const url = typeof resource === "string" ? resource : resource?.url;
+    return /google\.com\/search/i.test(url ?? "");
+  });
+}
+
+function withLearningResources(skill) {
+  if (Array.isArray(skill.resources) && skill.resources.length > 0 && !hasSearchResource(skill)) {
+    return skill;
+  }
+
+  return {
+    ...skill,
+    description: skill.description?.replace(/^Practice /, "Learn ") ?? `Learn ${skill.name} with real lessons and practice.`,
+    resources: resourcesForSkill(skill.name),
+  };
 }
 
 function buildRoadmap(skills, estimatedDays) {
@@ -375,7 +414,10 @@ function buildRoadmap(skills, estimatedDays) {
 }
 
 function roadmapWithProgress(job) {
-  const phases = job.roadmapPhases ?? [];
+  const phases = (job.roadmapPhases ?? []).map((phase) => ({
+    ...phase,
+    skills: (phase.skills ?? []).map(withLearningResources),
+  }));
   const skills = phases.flatMap((phase) => phase.skills);
   const completed = skills.filter((skill) => skill.completed).length;
   const completionPercentage = skills.length ? Math.round((completed / skills.length) * 100) : 0;
@@ -574,21 +616,22 @@ export function useGetSkillBreakdown(options) {
     queryFn: async () => {
       const jobs = userJobs();
       const colors = {
-        technical: "#6366f1",
+        technical: "#0ea5e9",
         practice: "#10b981",
         interview: "#f59e0b",
         dsa: "#10b981",
       };
       const labels = {
-        technical: "JD Skills",
-        practice: "Applied Practice",
-        interview: "Interview Revision",
-        dsa: "DSA",
+        technical: "Learned JD Skills",
+        practice: "Completed Practice",
+        interview: "Interview Revision Done",
+        dsa: "DSA Learned",
       };
       const counts = jobs
         .flatMap((job) => job.roadmapPhases ?? [])
         .reduce((totals, phase) => {
-          totals[phase.category] = (totals[phase.category] ?? 0) + (phase.skills?.length ?? 0);
+          const learnedCount = (phase.skills ?? []).filter((skill) => skill.completed).length;
+          totals[phase.category] = (totals[phase.category] ?? 0) + learnedCount;
           return totals;
         }, {});
 
@@ -596,7 +639,7 @@ export function useGetSkillBreakdown(options) {
         .map(([category, count]) => ({
           category: labels[category] ?? category,
           count,
-          color: colors[category] ?? "#6366f1",
+          color: colors[category] ?? "#0ea5e9",
         }))
         .filter((item) => item.count > 0);
     },

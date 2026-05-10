@@ -1,5 +1,27 @@
 {
-  "users": [],
+  "users": [
+    {
+      "id": "2677fcdd-606d-4f10-a23f-ed82e7760b62",
+      "name": "Smoke User",
+      "email": "smoke-1778393456733@skillora.local",
+      "createdAt": "2026-05-10T06:10:56.944Z",
+      "password": "password123"
+    },
+    {
+      "id": "d5a4469f-dbd9-4b26-ace3-5b90e3779296",
+      "name": "Test User",
+      "email": "test-1778393905356@skillora.local",
+      "createdAt": "2026-05-10T06:18:25.558Z",
+      "password": "password123"
+    },
+    {
+      "id": "719f4d17-7bfb-4d66-a190-9f607d43f3c5",
+      "name": "Hasmi",
+      "email": "hasmitha03@gmail.com",
+      "createdAt": "2026-05-10T06:19:47.041Z",
+      "password": "123456"
+    }
+  ],
   "jobs": [
     {
       "id": 1778344898414,
@@ -190,6 +212,532 @@
           "color": "#f59e0b",
           "startDay": 5,
           "endDay": 7,
+          "skills": [
+            {
+              "id": "interview-8-ci-cd",
+              "name": "CI/CD",
+              "description": "Practice CI/CD from the uploaded JD with examples, questions, and interview notes.",
+              "priority": "low",
+              "resources": [
+                {
+                  "title": "CI/CD learning roadmap",
+                  "url": "https://www.google.com/search?q=CI%2FCD%20interview%20preparation"
+                },
+                {
+                  "title": "CI/CD practice",
+                  "url": "https://www.google.com/search?q=CI%2FCD%20practice%20problems"
+                }
+              ],
+              "completed": false
+            },
+            {
+              "id": "interview-9-css",
+              "name": "CSS",
+              "description": "Practice CSS from the uploaded JD with examples, questions, and interview notes.",
+              "priority": "low",
+              "resources": [
+                {
+                  "title": "CSS learning roadmap",
+                  "url": "https://www.google.com/search?q=CSS%20interview%20preparation"
+                },
+                {
+                  "title": "CSS practice",
+                  "url": "https://www.google.com/search?q=CSS%20practice%20problems"
+                }
+              ],
+              "completed": false
+            },
+            {
+              "id": "interview-10-tailwind-css",
+              "name": "Tailwind CSS",
+              "description": "Practice Tailwind CSS from the uploaded JD with examples, questions, and interview notes.",
+              "priority": "low",
+              "resources": [
+                {
+                  "title": "Tailwind CSS learning roadmap",
+                  "url": "https://www.google.com/search?q=Tailwind%20CSS%20interview%20preparation"
+                },
+                {
+                  "title": "Tailwind CSS practice",
+                  "url": "https://www.google.com/search?q=Tailwind%20CSS%20practice%20problems"
+                }
+              ],
+              "completed": false
+            },
+            {
+              "id": "interview-11-system-design",
+              "name": "System Design",
+              "description": "Practice System Design from the uploaded JD with examples, questions, and interview notes.",
+              "priority": "low",
+              "resources": [
+                {
+                  "title": "System Design learning roadmap",
+                  "url": "https://www.google.com/search?q=System%20Design%20interview%20preparation"
+                },
+                {
+                  "title": "System Design practice",
+                  "url": "https://www.google.com/search?q=System%20Design%20practice%20problems"
+                }
+              ],
+              "completed": false
+            }
+          ]
+        }
+      ],
+      "analysisSource": "local-engine"
+    },
+    {
+      "id": 1778394102997,
+      "userEmail": "hasmitha03@gmail.com",
+      "title": "Mean stack developer",
+      "company": "Unisys",
+      "description": "*Unisys internship hiring for B.Tech (Computer Science) 2027 Batch students.* \n\nIt is to inform you that Unisys internship hiring for B.Tech (Computer Science) 2027 Batch students.\n\nThe internship duration will be 9 months to 1 year.\n\nInternship stipend: 35,000 PM\n\nJob Location: Bangalore\n\nEligibility: Only BE or B. Tech  -  2027 (Computer Science )\n\nNote :  Interns may be considered for full-time positions based on their performance and business requirements.\n\nIntern Job Description:\n\nMEAN Stack Developer (Mongo, Express, Angular, Node)\n\n\nRole Overview\n\nWe are looking for an Advanced Modern UI Developer to design and build high‑performance and scalable user interfaces for next‑generation digital platforms.\n\nThe ideal candidate brings strong frontend engineering expertise, hands‑on experience with modern JavaScript frameworks, and a Docker‑first / microservices‑oriented architecture mindset.\n\n \n\nKey Responsibilities\n\nDesign, develop, and maintain modern, responsive, and accessible web UIs\nBuild frontend applications using React, Angular, Vue.js, and/or Next.js\nDevelop UI architectures aligned with microservices and API‑driven backends\nConsume REST / GraphQL APIs and integrate with containerized backend services\nImplement component‑driven UI design (design systems, reusable components)\nCollaborate with UX designers to translate wireframes into high‑quality interfaces\nOptimize applications for performance, scalability, and cross‑browser compatibility\nWrite clean, maintainable, and testable frontend code\nParticipate in code reviews, technical design discussions, and architecture reviews\nWork within CI/CD pipelines and cloud‑native delivery models\nContribute to frontend best practices, standards, and technical direction\n \n\nRequired Skills & Experience \n\nFrontend & UI Technologies\n\nStrong proficiency in JavaScript / TypeScript\nHands‑on experience with one or more: React | Angular | Vue.js | Next.js\nExperience with:\nHTML5, CSS3, SCSS, Tailwind, or modern CSS frameworks\nUI component libraries and design systems\n \n\nArchitecture & Engineering\n\nExperience working in a microservices‑based architecture\nStrong understanding of API‑first development\nFamiliarity with Docker‑based development workflows\nExperience running frontend apps in containerized environments\nUnderstanding of frontend build tools and bundlers (Webpack, Vite, etc.)\n \n\nWhat We Look For\n\nStrong innovation mindset with attention to detail\nAbility to work independently and collaboratively in cross‑functional teams\nPassion for modern frontend technologies and UI innovation\nClear communication and problem‑solving skills\nComfort working in fast‑evolving, research‑driven or innovation‑led environments\n \n\nPlease share the top 25 suitable profiles for this job role.",
+      "deadline": "2026-05-20",
+      "status": "analyzed",
+      "createdAt": "2026-05-10T06:21:42.998Z",
+      "extractedSkills": [
+        "React",
+        "Angular",
+        "JavaScript",
+        "TypeScript",
+        "Express",
+        "REST APIs",
+        "GraphQL",
+        "Docker",
+        "CI/CD",
+        "CSS",
+        "Tailwind CSS",
+        "System Design"
+      ],
+      "estimatedDays": 10,
+      "difficulty": "advanced",
+      "roadmapPhases": [
+        {
+          "id": "foundation",
+          "title": "JD Skills Foundation",
+          "category": "technical",
+          "color": "#6366f1",
+          "startDay": 1,
+          "endDay": 3,
+          "skills": [
+            {
+              "id": "technical-0-react",
+              "name": "React",
+              "description": "Practice React from the uploaded JD with examples, questions, and interview notes.",
+              "priority": "high",
+              "resources": [
+                {
+                  "title": "React learning roadmap",
+                  "url": "https://www.google.com/search?q=React%20interview%20preparation"
+                },
+                {
+                  "title": "React practice",
+                  "url": "https://www.google.com/search?q=React%20practice%20problems"
+                }
+              ],
+              "completed": false
+            },
+            {
+              "id": "technical-1-angular",
+              "name": "Angular",
+              "description": "Practice Angular from the uploaded JD with examples, questions, and interview notes.",
+              "priority": "high",
+              "resources": [
+                {
+                  "title": "Angular learning roadmap",
+                  "url": "https://www.google.com/search?q=Angular%20interview%20preparation"
+                },
+                {
+                  "title": "Angular practice",
+                  "url": "https://www.google.com/search?q=Angular%20practice%20problems"
+                }
+              ],
+              "completed": false
+            },
+            {
+              "id": "technical-2-javascript",
+              "name": "JavaScript",
+              "description": "Practice JavaScript from the uploaded JD with examples, questions, and interview notes.",
+              "priority": "high",
+              "resources": [
+                {
+                  "title": "JavaScript learning roadmap",
+                  "url": "https://www.google.com/search?q=JavaScript%20interview%20preparation"
+                },
+                {
+                  "title": "JavaScript practice",
+                  "url": "https://www.google.com/search?q=JavaScript%20practice%20problems"
+                }
+              ],
+              "completed": false
+            },
+            {
+              "id": "technical-3-typescript",
+              "name": "TypeScript",
+              "description": "Practice TypeScript from the uploaded JD with examples, questions, and interview notes.",
+              "priority": "medium",
+              "resources": [
+                {
+                  "title": "TypeScript learning roadmap",
+                  "url": "https://www.google.com/search?q=TypeScript%20interview%20preparation"
+                },
+                {
+                  "title": "TypeScript practice",
+                  "url": "https://www.google.com/search?q=TypeScript%20practice%20problems"
+                }
+              ],
+              "completed": false
+            }
+          ]
+        },
+        {
+          "id": "practice",
+          "title": "Applied Practice",
+          "category": "practice",
+          "color": "#10b981",
+          "startDay": 4,
+          "endDay": 6,
+          "skills": [
+            {
+              "id": "practice-4-express",
+              "name": "Express",
+              "description": "Practice Express from the uploaded JD with examples, questions, and interview notes.",
+              "priority": "medium",
+              "resources": [
+                {
+                  "title": "Express learning roadmap",
+                  "url": "https://www.google.com/search?q=Express%20interview%20preparation"
+                },
+                {
+                  "title": "Express practice",
+                  "url": "https://www.google.com/search?q=Express%20practice%20problems"
+                }
+              ],
+              "completed": false
+            },
+            {
+              "id": "practice-5-rest-apis",
+              "name": "REST APIs",
+              "description": "Practice REST APIs from the uploaded JD with examples, questions, and interview notes.",
+              "priority": "medium",
+              "resources": [
+                {
+                  "title": "REST APIs learning roadmap",
+                  "url": "https://www.google.com/search?q=REST%20APIs%20interview%20preparation"
+                },
+                {
+                  "title": "REST APIs practice",
+                  "url": "https://www.google.com/search?q=REST%20APIs%20practice%20problems"
+                }
+              ],
+              "completed": false
+            },
+            {
+              "id": "practice-6-graphql",
+              "name": "GraphQL",
+              "description": "Practice GraphQL from the uploaded JD with examples, questions, and interview notes.",
+              "priority": "low",
+              "resources": [
+                {
+                  "title": "GraphQL learning roadmap",
+                  "url": "https://www.google.com/search?q=GraphQL%20interview%20preparation"
+                },
+                {
+                  "title": "GraphQL practice",
+                  "url": "https://www.google.com/search?q=GraphQL%20practice%20problems"
+                }
+              ],
+              "completed": false
+            },
+            {
+              "id": "practice-7-docker",
+              "name": "Docker",
+              "description": "Practice Docker from the uploaded JD with examples, questions, and interview notes.",
+              "priority": "low",
+              "resources": [
+                {
+                  "title": "Docker learning roadmap",
+                  "url": "https://www.google.com/search?q=Docker%20interview%20preparation"
+                },
+                {
+                  "title": "Docker practice",
+                  "url": "https://www.google.com/search?q=Docker%20practice%20problems"
+                }
+              ],
+              "completed": false
+            }
+          ]
+        },
+        {
+          "id": "interview",
+          "title": "Interview Revision",
+          "category": "interview",
+          "color": "#f59e0b",
+          "startDay": 7,
+          "endDay": 10,
+          "skills": [
+            {
+              "id": "interview-8-ci-cd",
+              "name": "CI/CD",
+              "description": "Practice CI/CD from the uploaded JD with examples, questions, and interview notes.",
+              "priority": "low",
+              "resources": [
+                {
+                  "title": "CI/CD learning roadmap",
+                  "url": "https://www.google.com/search?q=CI%2FCD%20interview%20preparation"
+                },
+                {
+                  "title": "CI/CD practice",
+                  "url": "https://www.google.com/search?q=CI%2FCD%20practice%20problems"
+                }
+              ],
+              "completed": false
+            },
+            {
+              "id": "interview-9-css",
+              "name": "CSS",
+              "description": "Practice CSS from the uploaded JD with examples, questions, and interview notes.",
+              "priority": "low",
+              "resources": [
+                {
+                  "title": "CSS learning roadmap",
+                  "url": "https://www.google.com/search?q=CSS%20interview%20preparation"
+                },
+                {
+                  "title": "CSS practice",
+                  "url": "https://www.google.com/search?q=CSS%20practice%20problems"
+                }
+              ],
+              "completed": false
+            },
+            {
+              "id": "interview-10-tailwind-css",
+              "name": "Tailwind CSS",
+              "description": "Practice Tailwind CSS from the uploaded JD with examples, questions, and interview notes.",
+              "priority": "low",
+              "resources": [
+                {
+                  "title": "Tailwind CSS learning roadmap",
+                  "url": "https://www.google.com/search?q=Tailwind%20CSS%20interview%20preparation"
+                },
+                {
+                  "title": "Tailwind CSS practice",
+                  "url": "https://www.google.com/search?q=Tailwind%20CSS%20practice%20problems"
+                }
+              ],
+              "completed": false
+            },
+            {
+              "id": "interview-11-system-design",
+              "name": "System Design",
+              "description": "Practice System Design from the uploaded JD with examples, questions, and interview notes.",
+              "priority": "low",
+              "resources": [
+                {
+                  "title": "System Design learning roadmap",
+                  "url": "https://www.google.com/search?q=System%20Design%20interview%20preparation"
+                },
+                {
+                  "title": "System Design practice",
+                  "url": "https://www.google.com/search?q=System%20Design%20practice%20problems"
+                }
+              ],
+              "completed": false
+            }
+          ]
+        }
+      ],
+      "analysisSource": "local-engine"
+    },
+    {
+      "id": 1778394537270,
+      "userEmail": "hasmitha03@gmail.com",
+      "title": "Mernstack developer",
+      "company": "Unisys",
+      "description": "*Unisys internship hiring for B.Tech (Computer Science) 2027 Batch students.* \n\nIt is to inform you that Unisys internship hiring for B.Tech (Computer Science) 2027 Batch students.\n\nThe internship duration will be 9 months to 1 year.\n\nInternship stipend: 35,000 PM\n\nJob Location: Bangalore\n\nEligibility: Only BE or B. Tech  -  2027 (Computer Science )\n\nNote :  Interns may be considered for full-time positions based on their performance and business requirements.\n\nIntern Job Description:\n\nMEAN Stack Developer (Mongo, Express, Angular, Node)\n\n\nRole Overview\n\nWe are looking for an Advanced Modern UI Developer to design and build high‑performance and scalable user interfaces for next‑generation digital platforms.\n\nThe ideal candidate brings strong frontend engineering expertise, hands‑on experience with modern JavaScript frameworks, and a Docker‑first / microservices‑oriented architecture mindset.\n\n \n\nKey Responsibilities\n\nDesign, develop, and maintain modern, responsive, and accessible web UIs\nBuild frontend applications using React, Angular, Vue.js, and/or Next.js\nDevelop UI architectures aligned with microservices and API‑driven backends\nConsume REST / GraphQL APIs and integrate with containerized backend services\nImplement component‑driven UI design (design systems, reusable components)\nCollaborate with UX designers to translate wireframes into high‑quality interfaces\nOptimize applications for performance, scalability, and cross‑browser compatibility\nWrite clean, maintainable, and testable frontend code\nParticipate in code reviews, technical design discussions, and architecture reviews\nWork within CI/CD pipelines and cloud‑native delivery models\nContribute to frontend best practices, standards, and technical direction\n \n\nRequired Skills & Experience \n\nFrontend & UI Technologies\n\nStrong proficiency in JavaScript / TypeScript\nHands‑on experience with one or more: React | Angular | Vue.js | Next.js\nExperience with:\nHTML5, CSS3, SCSS, Tailwind, or modern CSS frameworks\nUI component libraries and design systems\n \n\nArchitecture & Engineering\n\nExperience working in a microservices‑based architecture\nStrong understanding of API‑first development\nFamiliarity with Docker‑based development workflows\nExperience running frontend apps in containerized environments\nUnderstanding of frontend build tools and bundlers (Webpack, Vite, etc.)\n \n\nWhat We Look For\n\nStrong innovation mindset with attention to detail\nAbility to work independently and collaboratively in cross‑functional teams\nPassion for modern frontend technologies and UI innovation\nClear communication and problem‑solving skills\nComfort working in fast‑evolving, research‑driven or innovation‑led environments\n \n\nPlease share the top 25 suitable profiles for this job role.",
+      "deadline": "2026-05-20",
+      "status": "analyzed",
+      "createdAt": "2026-05-10T06:28:57.270Z",
+      "extractedSkills": [
+        "React",
+        "Angular",
+        "JavaScript",
+        "TypeScript",
+        "Express",
+        "REST APIs",
+        "GraphQL",
+        "Docker",
+        "CI/CD",
+        "CSS",
+        "Tailwind CSS",
+        "System Design"
+      ],
+      "estimatedDays": 10,
+      "difficulty": "advanced",
+      "roadmapPhases": [
+        {
+          "id": "foundation",
+          "title": "JD Skills Foundation",
+          "category": "technical",
+          "color": "#6366f1",
+          "startDay": 1,
+          "endDay": 3,
+          "skills": [
+            {
+              "id": "technical-0-react",
+              "name": "React",
+              "description": "Practice React from the uploaded JD with examples, questions, and interview notes.",
+              "priority": "high",
+              "resources": [
+                {
+                  "title": "React learning roadmap",
+                  "url": "https://www.google.com/search?q=React%20interview%20preparation"
+                },
+                {
+                  "title": "React practice",
+                  "url": "https://www.google.com/search?q=React%20practice%20problems"
+                }
+              ],
+              "completed": false
+            },
+            {
+              "id": "technical-1-angular",
+              "name": "Angular",
+              "description": "Practice Angular from the uploaded JD with examples, questions, and interview notes.",
+              "priority": "high",
+              "resources": [
+                {
+                  "title": "Angular learning roadmap",
+                  "url": "https://www.google.com/search?q=Angular%20interview%20preparation"
+                },
+                {
+                  "title": "Angular practice",
+                  "url": "https://www.google.com/search?q=Angular%20practice%20problems"
+                }
+              ],
+              "completed": false
+            },
+            {
+              "id": "technical-2-javascript",
+              "name": "JavaScript",
+              "description": "Practice JavaScript from the uploaded JD with examples, questions, and interview notes.",
+              "priority": "high",
+              "resources": [
+                {
+                  "title": "JavaScript learning roadmap",
+                  "url": "https://www.google.com/search?q=JavaScript%20interview%20preparation"
+                },
+                {
+                  "title": "JavaScript practice",
+                  "url": "https://www.google.com/search?q=JavaScript%20practice%20problems"
+                }
+              ],
+              "completed": false
+            },
+            {
+              "id": "technical-3-typescript",
+              "name": "TypeScript",
+              "description": "Practice TypeScript from the uploaded JD with examples, questions, and interview notes.",
+              "priority": "medium",
+              "resources": [
+                {
+                  "title": "TypeScript learning roadmap",
+                  "url": "https://www.google.com/search?q=TypeScript%20interview%20preparation"
+                },
+                {
+                  "title": "TypeScript practice",
+                  "url": "https://www.google.com/search?q=TypeScript%20practice%20problems"
+                }
+              ],
+              "completed": false
+            }
+          ]
+        },
+        {
+          "id": "practice",
+          "title": "Applied Practice",
+          "category": "practice",
+          "color": "#10b981",
+          "startDay": 4,
+          "endDay": 6,
+          "skills": [
+            {
+              "id": "practice-4-express",
+              "name": "Express",
+              "description": "Practice Express from the uploaded JD with examples, questions, and interview notes.",
+              "priority": "medium",
+              "resources": [
+                {
+                  "title": "Express learning roadmap",
+                  "url": "https://www.google.com/search?q=Express%20interview%20preparation"
+                },
+                {
+                  "title": "Express practice",
+                  "url": "https://www.google.com/search?q=Express%20practice%20problems"
+                }
+              ],
+              "completed": false
+            },
+            {
+              "id": "practice-5-rest-apis",
+              "name": "REST APIs",
+              "description": "Practice REST APIs from the uploaded JD with examples, questions, and interview notes.",
+              "priority": "medium",
+              "resources": [
+                {
+                  "title": "REST APIs learning roadmap",
+                  "url": "https://www.google.com/search?q=REST%20APIs%20interview%20preparation"
+                },
+                {
+                  "title": "REST APIs practice",
+                  "url": "https://www.google.com/search?q=REST%20APIs%20practice%20problems"
+                }
+              ],
+              "completed": false
+            },
+            {
+              "id": "practice-6-graphql",
+              "name": "GraphQL",
+              "description": "Practice GraphQL from the uploaded JD with examples, questions, and interview notes.",
+              "priority": "low",
+              "resources": [
+                {
+                  "title": "GraphQL learning roadmap",
+                  "url": "https://www.google.com/search?q=GraphQL%20interview%20preparation"
+                },
+                {
+                  "title": "GraphQL practice",
+                  "url": "https://www.google.com/search?q=GraphQL%20practice%20problems"
+                }
+              ],
+              "completed": false
+            },
+            {
+              "id": "practice-7-docker",
+              "name": "Docker",
+              "description": "Practice Docker from the uploaded JD with examples, questions, and interview notes.",
+              "priority": "low",
+              "resources": [
+                {
+                  "title": "Docker learning roadmap",
+                  "url": "https://www.google.com/search?q=Docker%20interview%20preparation"
+                },
+                {
+                  "title": "Docker practice",
+                  "url": "https://www.google.com/search?q=Docker%20practice%20problems"
+                }
+              ],
+              "completed": false
+            }
+          ]
+        },
+        {
+          "id": "interview",
+          "title": "Interview Revision",
+          "category": "interview",
+          "color": "#f59e0b",
+          "startDay": 7,
+          "endDay": 10,
           "skills": [
             {
               "id": "interview-8-ci-cd",
