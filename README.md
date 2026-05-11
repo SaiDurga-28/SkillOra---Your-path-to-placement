@@ -72,6 +72,10 @@ OPENAI_API_KEY=
 OPENAI_MODEL=gpt-5.4-mini
 OPENAI_BASE_URL=https://api.openai.com/v1
 
+GROQ_API_KEY=
+GROQ_MODEL=llama-3.3-70b-versatile
+GROQ_BASE_URL=https://api.groq.com/openai/v1
+
 XAI_API_KEY=
 XAI_MODEL=grok-4-fast
 XAI_BASE_URL=https://api.x.ai/v1

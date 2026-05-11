@@ -10,6 +10,15 @@ function getAiConfig() {
     };
   }
 
+  if (process.env.GROQ_API_KEY) {
+    return {
+      provider: "groq",
+      apiKey: process.env.GROQ_API_KEY,
+      baseUrl: process.env.GROQ_BASE_URL || "https://api.groq.com/openai/v1",
+      model: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
+    };
+  }
+
   if (process.env.XAI_API_KEY) {
     return {
       provider: "xai",
@@ -61,16 +70,16 @@ function buildResponsesBody(ai, system, payload) {
 async function callAiJson(system, payload, fallback) {
   const ai = getAiConfig();
   if (!ai) return fallback();
-  const isXai = ai.provider === "xai";
+  const usesChatCompletions = ai.provider === "xai" || ai.provider === "groq";
 
   try {
-    const response = await fetch(`${ai.baseUrl}/${isXai ? "chat/completions" : "responses"}`, {
+    const response = await fetch(`${ai.baseUrl}/${usesChatCompletions ? "chat/completions" : "responses"}`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${ai.apiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(isXai ? buildChatCompletionBody(ai, system, payload) : buildResponsesBody(ai, system, payload)),
+      body: JSON.stringify(usesChatCompletions ? buildChatCompletionBody(ai, system, payload) : buildResponsesBody(ai, system, payload)),
     });
 
     if (!response.ok) {
@@ -89,18 +98,18 @@ export async function analyzeJobWithAi(payload) {
   const fallback = analyzeJobLocally(payload);
   if (!ai) return fallback;
 
-  const isXai = ai.provider === "xai";
+  const usesChatCompletions = ai.provider === "xai" || ai.provider === "groq";
   const system =
     "You analyze job descriptions. Return only valid JSON with extractedSkills, difficulty, estimatedDays, roadmapPhases. Use only skills clearly present in the JD.";
 
   try {
-    const response = await fetch(`${ai.baseUrl}/${isXai ? "chat/completions" : "responses"}`, {
+    const response = await fetch(`${ai.baseUrl}/${usesChatCompletions ? "chat/completions" : "responses"}`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${ai.apiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(isXai ? buildChatCompletionBody(ai, system, payload) : buildResponsesBody(ai, system, payload)),
+      body: JSON.stringify(usesChatCompletions ? buildChatCompletionBody(ai, system, payload) : buildResponsesBody(ai, system, payload)),
     });
 
     if (!response.ok) return fallback;
