@@ -230,12 +230,14 @@ export default function LandingPage() {
                   <p className="text-sm font-semibold">Keep your prep moving.</p>
                   <p className="mt-2 text-xs leading-relaxed text-muted-foreground">Upload one JD, complete today’s roadmap tasks, and practice one answer every day.</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <a href="mailto:hello@skillora.example" aria-label="Email SkillOra" className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary">
-                    <Mail className="h-4 w-4"/>
+                <div className="space-y-2 text-sm">
+                  <a href="mailto:skilloraconnect@gmail.com" aria-label="Email SkillOra" className="flex items-center gap-2 text-muted-foreground transition-colors hover:text-primary">
+                    <Mail className="h-4 w-4 shrink-0"/>
+                    <span>skilloraconnect@gmail.com</span>
                   </a>
-                  <a href="https://www.linkedin.com/company/skillora-placeholder" target="_blank" rel="noreferrer" aria-label="SkillOra LinkedIn" className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary">
-                    <Linkedin className="h-4 w-4"/>
+                  <a href="https://www.linkedin.com/in/skill-ora-41368640a/" target="_blank" rel="noreferrer" aria-label="SkillOra LinkedIn" className="flex items-center gap-2 text-muted-foreground transition-colors hover:text-primary">
+                    <Linkedin className="h-4 w-4 shrink-0"/>
+                    <span>LinkedIn</span>
                   </a>
                 </div>
               </div>

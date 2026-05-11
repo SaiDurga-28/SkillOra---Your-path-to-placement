@@ -64,32 +64,31 @@
   --app-font-mono: Menlo, monospace;
   --radius: 0.5rem;
 
-  --background: 210 36% 98%;
-  --foreground: 222 47% 11%;
-  --border: 214 32% 88%;
-  --input: 214 32% 88%;
-  --ring: 199 89% 48%;
+  --background: 214 45% 97%;
+  --foreground: 222 43% 10%;
+  --border: 216 30% 86%;
+  --input: 216 30% 86%;
+  --ring: 196 84% 40%;
 
   --card: 0 0% 100%;
   --card-foreground: 222 47% 11%;
-  --card-border: 214 32% 88%;
+  --card-border: 216 30% 86%;
 
   --popover: 0 0% 100%;
   --popover-foreground: 222 47% 11%;
   --popover-border: 214 32% 88%;
 
-  /* Professional blue */
-  --primary: 199 89% 42%;
+  /* Light mode uses a calmer ink-blue with teal interaction accents. */
+  --primary: 203 82% 36%;
   --primary-foreground: 0 0% 100%;
   
-  --secondary: 210 40% 94%;
+  --secondary: 213 32% 92%;
   --secondary-foreground: 215 28% 17%;
   
-  --muted: 210 40% 96%;
-  --muted-foreground: 215 16% 42%;
+  --muted: 214 38% 94%;
+  --muted-foreground: 216 16% 38%;
   
-  /* Interactive teal */
-  --accent: 173 80% 40%;
+  --accent: 168 76% 34%;
   --accent-foreground: 180 100% 98%;
   
   --destructive: 0 84% 60%;

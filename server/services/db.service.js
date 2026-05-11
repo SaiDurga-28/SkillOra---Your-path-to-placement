@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { MongoClient } from "mongodb";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DATA_DIR = path.join(__dirname, "data");
+const DATA_DIR = path.join(__dirname, "..", "data");
 const DB_FILE = path.join(DATA_DIR, "skillora-db.json");
 const STATE_COLLECTION = "app_state";
 const STATE_DOCUMENT_ID = "skillora";

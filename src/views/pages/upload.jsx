@@ -189,7 +189,7 @@ export default function UploadPage() {
                         </FormItem>)}/>
 
                       <Button type="submit" className="w-full gap-2" disabled={createJob.isPending} data-testid="button-analyze">
-                        {createJob.isPending ? (<><Loader2 className="w-4 h-4 animate-spin"/> Analyzing with AI...</>) : (<><Sparkles className="w-4 h-4"/> Analyze & Generate Roadmap</>)}
+                        {createJob.isPending ? (<><Loader2 className="w-4 h-4 animate-spin"/> Generating roadmap...</>) : (<><Sparkles className="w-4 h-4"/> Analyze & Generate Roadmap</>)}
                       </Button>
                     </form>
                   </Form>

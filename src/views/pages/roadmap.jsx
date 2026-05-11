@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { useGetRoadmap, useUpdateProgress, getGetRoadmapQueryKey, getListProgressQueryKey, getGetDashboardSummaryQueryKey, getGetSkillBreakdownQueryKey, getGetWeeklyProgressQueryKey } from "@/api";
+import { useGetRoadmap, useUpdateProgress, getGetRoadmapQueryKey, getListJobsQueryKey, getListProgressQueryKey, getGetDashboardSummaryQueryKey, getGetSkillBreakdownQueryKey, getGetWeeklyProgressQueryKey, getGetUpcomingTasksQueryKey } from "@/api";
 import { useQueryClient } from "@tanstack/react-query";
 const categoryIcon = {
     technical: Code,
@@ -40,16 +40,22 @@ export default function RoadmapPage() {
             skillId,
             data: { completed: !currentCompleted },
         }, {
-            onSuccess: () => {
+            onSuccess: (updatedRoadmap) => {
+                queryClient.setQueryData(getGetRoadmapQueryKey(id), updatedRoadmap);
                 queryClient.invalidateQueries({ queryKey: getGetRoadmapQueryKey(id) });
+                queryClient.invalidateQueries({ queryKey: getListJobsQueryKey() });
                 queryClient.invalidateQueries({ queryKey: getListProgressQueryKey() });
                 queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
                 queryClient.invalidateQueries({ queryKey: getGetSkillBreakdownQueryKey() });
                 queryClient.invalidateQueries({ queryKey: getGetWeeklyProgressQueryKey() });
+                queryClient.invalidateQueries({ queryKey: getGetUpcomingTasksQueryKey() });
                 toast({
                     title: !currentCompleted ? "Skill completed!" : "Skill unmarked",
                     description: !currentCompleted ? "Great progress! Keep it up." : "Skill marked as incomplete.",
                 });
+            },
+            onError: (error) => {
+                toast({ title: "Could not update skill", description: error.message ?? "Please try again.", variant: "destructive" });
             },
         });
     };
@@ -119,7 +125,7 @@ export default function RoadmapPage() {
                       <CardContent className="space-y-3">
                         {phase.skills.map((skill) => (<motion.div key={skill.id} layout className={`p-4 rounded-lg border transition-all ${skill.completed ? "border-green-500/30 bg-green-500/5" : "border-border hover:border-primary/30"}`} data-testid={`skill-item-${skill.id}`}>
                             <div className="flex items-start gap-3">
-                              <button onClick={() => toggleSkill(roadmap.data.id, skill.id, skill.completed)} className="mt-0.5 shrink-0 transition-transform hover:scale-110" data-testid={`checkbox-skill-${skill.id}`}>
+                              <button onClick={() => toggleSkill(roadmap.data.id, skill.id, skill.completed)} disabled={updateProgress.isPending} className="mt-0.5 shrink-0 transition-transform hover:scale-110 disabled:cursor-not-allowed disabled:opacity-60" data-testid={`checkbox-skill-${skill.id}`}>
                                 {skill.completed ? (<CheckCircle className="w-5 h-5 text-green-500"/>) : (<Circle className="w-5 h-5 text-muted-foreground"/>)}
                               </button>
                               <div className="flex-1 min-w-0">

@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth-context";
 import { useTheme } from "@/lib/theme-context";
-import { Home, LayoutDashboard, Upload, Briefcase, Mic, BookOpen, Settings, LogOut, Sun, Moon, Menu } from "lucide-react";
+import { Home, LayoutDashboard, Upload, Briefcase, Mic, BookOpen, FileText, Settings, LogOut, Sun, Moon, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -16,6 +16,7 @@ const navItems = [
     { href: "/jobs", icon: Briefcase, label: "My Jobs" },
     { href: "/interviews", icon: Mic, label: "Mock Interviews" },
     { href: "/crt", icon: BookOpen, label: "Assessments" },
+    { href: "/resume-analyzer", icon: FileText, label: "Resume Analyzer" },
     { href: "/settings", icon: Settings, label: "Settings" },
 ];
 export function AppLayout({ children }) {

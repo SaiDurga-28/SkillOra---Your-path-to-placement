@@ -2,6 +2,7 @@ export * from "./generated/api";
 export * from "./generated/api.schemas";
 export { setBaseUrl, setAuthTokenGetter } from "./custom-fetch";
 export {
+  abandonInterviewSession,
   getGetDashboardSummaryQueryKey,
   getGetJobQueryKey,
   getGetMeQueryKey,
@@ -15,6 +16,8 @@ export {
   getListProgressQueryKey,
   useCreateInterview,
   useCreateJob,
+  useDeleteJob,
+  useAnalyzeResume,
   useGetDashboardSummary,
   useGetJob,
   useGetMe,

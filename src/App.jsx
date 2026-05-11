@@ -4,19 +4,20 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { ThemeProvider } from "@/lib/theme-context";
-import LandingPage from "@/pages/landing";
-import LoginPage from "@/pages/login";
-import RegisterPage from "@/pages/register";
-import DashboardPage from "@/pages/dashboard";
-import UploadPage from "@/pages/upload";
-import JobsPage from "@/pages/jobs";
-import JobDetailPage from "@/pages/job-detail";
-import RoadmapPage from "@/pages/roadmap";
-import InterviewsPage from "@/pages/interviews";
-import InterviewSessionPage from "@/pages/interview-session";
-import CrtPage from "@/pages/crt";
-import SettingsPage from "@/pages/settings";
-import NotFound from "@/pages/not-found";
+import LandingPage from "@/views/pages/landing";
+import LoginPage from "@/views/pages/login";
+import RegisterPage from "@/views/pages/register";
+import DashboardPage from "@/views/pages/dashboard";
+import UploadPage from "@/views/pages/upload";
+import JobsPage from "@/views/pages/jobs";
+import JobDetailPage from "@/views/pages/job-detail";
+import RoadmapPage from "@/views/pages/roadmap";
+import InterviewsPage from "@/views/pages/interviews";
+import InterviewSessionPage from "@/views/pages/interview-session";
+import CrtPage from "@/views/pages/crt";
+import ResumeAnalyzerPage from "@/views/pages/resume-analyzer";
+import SettingsPage from "@/views/pages/settings";
+import NotFound from "@/views/pages/not-found";
 const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
@@ -44,6 +45,7 @@ function Router() {
       <Route path="/interviews"><ProtectedRoute component={InterviewsPage}/></Route>
       <Route path="/interviews/:interviewId"><ProtectedRoute component={InterviewSessionPage}/></Route>
       <Route path="/crt"><ProtectedRoute component={CrtPage}/></Route>
+      <Route path="/resume-analyzer"><ProtectedRoute component={ResumeAnalyzerPage}/></Route>
       <Route path="/settings"><ProtectedRoute component={SettingsPage}/></Route>
       <Route component={NotFound}/>
     </Switch>);

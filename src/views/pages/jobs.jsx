@@ -1,15 +1,27 @@
 import { motion } from "framer-motion";
 import { Link } from "wouter";
-import { Briefcase, Plus, Calendar, ChevronRight, AlertCircle } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Briefcase, Plus, Calendar, ChevronRight, AlertCircle, Trash2 } from "lucide-react";
 import { AppLayout } from "@/components/layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useListJobs, getListJobsQueryKey } from "@/api";
+import { useToast } from "@/hooks/use-toast";
+import {
+    useDeleteJob,
+    useListJobs,
+    getGetDashboardSummaryQueryKey,
+    getGetSkillBreakdownQueryKey,
+    getGetUpcomingTasksQueryKey,
+    getGetWeeklyProgressQueryKey,
+    getGetRoadmapQueryKey,
+    getListInterviewsQueryKey,
+    getListJobsQueryKey,
+} from "@/api";
 const statusConfig = {
     pending: { label: "Pending", variant: "secondary" },
-    analyzed: { label: "Analyzed", variant: "default" },
+    analyzed: { label: "Start", variant: "secondary" },
     in_progress: { label: "In Progress", variant: "default" },
     completed: { label: "Completed", variant: "secondary" },
 };
@@ -19,7 +31,33 @@ const difficultyColor = {
     advanced: "text-red-500",
 };
 export default function JobsPage() {
+    const { toast } = useToast();
+    const queryClient = useQueryClient();
     const jobs = useListJobs({ query: { queryKey: getListJobsQueryKey() } });
+    const deleteJob = useDeleteJob();
+    const refreshProgressQueries = () => {
+        [
+            getListJobsQueryKey(),
+            getGetDashboardSummaryQueryKey(),
+            getGetSkillBreakdownQueryKey(),
+            getGetUpcomingTasksQueryKey(),
+            getGetWeeklyProgressQueryKey(),
+            getListInterviewsQueryKey(),
+        ].forEach(queryKey => queryClient.invalidateQueries({ queryKey }));
+    };
+    const handleDeleteJob = (job) => {
+        if (!window.confirm(`Delete "${job.title}" and its interview history?`))
+            return;
+        deleteJob.mutate({ jobId: job.id }, {
+            onSuccess: () => {
+                queryClient.setQueryData(getListJobsQueryKey(), (current = []) => current.filter(item => String(item.id) !== String(job.id)));
+                queryClient.removeQueries({ queryKey: getGetRoadmapQueryKey(job.id) });
+                refreshProgressQueries();
+                toast({ title: "Job deleted", description: "Your dashboard has been updated." });
+            },
+            onError: () => toast({ title: "Failed to delete job", variant: "destructive" }),
+        });
+    };
     return (<AppLayout>
       <div className="p-6 max-w-4xl mx-auto space-y-6">
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between">
@@ -72,6 +110,8 @@ export default function JobsPage() {
                             <span className={`font-medium capitalize ${diffClass}`}>{job.difficulty}</span>
                             <span>{job.estimatedDays} days plan</span>
                             <span>{job.extractedSkills.length} skills</span>
+                            <span>{job.completedSkills ?? 0} completed</span>
+                            {job.status === "analyzed" && <span>Preparation not started</span>}
                           </div>
                           <div className="flex flex-wrap gap-1 mt-2">
                             {job.extractedSkills.slice(0, 5).map(s => (<Badge key={s} variant="outline" className="text-xs py-0">{s}</Badge>))}
@@ -80,6 +120,9 @@ export default function JobsPage() {
                         </div>
                         <div className="flex items-center gap-3 shrink-0">
                           <Badge variant={status.variant}>{status.label}</Badge>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteJob(job)} disabled={deleteJob.isPending} data-testid={`button-delete-job-${job.id}`}>
+                            <Trash2 className="w-4 h-4"/>
+                          </Button>
                           <Link href={`/roadmap/${job.id}`}>
                             <Button variant="ghost" size="icon" className="h-8 w-8" data-testid={`button-view-roadmap-${job.id}`}>
                               <ChevronRight className="w-4 h-4"/>

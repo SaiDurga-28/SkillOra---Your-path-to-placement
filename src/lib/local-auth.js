@@ -1,4 +1,7 @@
+import bcrypt from "bcryptjs";
+
 const USERS_KEY = "job-prep-users";
+const BCRYPT_ROUNDS = 10;
 
 function readUsers() {
   try {
@@ -17,18 +20,33 @@ function createToken() {
 }
 
 async function postAuth(path, data) {
-  const response = await fetch(path, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => null);
-    throw new Error(error?.message ?? "Authentication failed.");
+  const urls = [path];
+  if (typeof window !== "undefined" && window.location.port !== "3001") {
+    urls.push(`http://127.0.0.1:3001${path}`);
   }
 
-  return response.json();
+  let lastError = null;
+  for (const url of urls) {
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => null);
+        throw new Error(error?.message ?? "Authentication failed.");
+      }
+
+      return response.json();
+    } catch (error) {
+      lastError = error;
+      if (!isBackendUnavailable(error)) throw error;
+    }
+  }
+
+  throw lastError ?? new Error("Authentication server is unavailable.");
 }
 
 function isBackendUnavailable(error) {
@@ -55,7 +73,7 @@ export async function registerLocalUser({ name, email, password }) {
     email: normalizedEmail,
   };
 
-  users.push({ ...user, password });
+  users.push({ ...user, passwordHash: await bcrypt.hash(password, BCRYPT_ROUNDS) });
   writeUsers(users);
 
   return {
@@ -72,15 +90,24 @@ export async function loginLocalUser({ email, password }) {
   }
 
   const normalizedEmail = email.trim().toLowerCase();
-  const account = readUsers().find(
-    (user) => user.email === normalizedEmail && user.password === password,
-  );
+  const users = readUsers();
+  const account = users.find((user) => user.email === normalizedEmail);
 
-  if (!account) {
-    throw new Error("Invalid email or password.");
+  const passwordMatches = account?.passwordHash
+    ? await bcrypt.compare(password, account.passwordHash)
+    : account?.password === password;
+
+  if (!account || !passwordMatches) {
+    throw new Error("Invalid email or password. To use the same account in Chrome, Edge, or another browser, keep the SkillOra API server running on port 3001.");
   }
 
-  const { password: _password, ...user } = account;
+  if (!account.passwordHash) {
+    account.passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+    delete account.password;
+    writeUsers(users);
+  }
+
+  const { password: _password, passwordHash: _passwordHash, ...user } = account;
 
   return {
     token: createToken(),
