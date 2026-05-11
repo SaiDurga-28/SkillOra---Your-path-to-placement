@@ -148,27 +148,39 @@ function completedUserInterviews() {
   return userInterviews().filter((interview) => interview.status === "completed");
 }
 
+function dateKey(value = new Date()) {
+  const date = value instanceof Date ? value : new Date(value);
+  if (!Number.isFinite(date.getTime())) return null;
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function getUserInterviewStats() {
   const user = currentUser();
+  if (!user?.email) return { totalCompleted: 0, events: [] };
+
   const allStats = readInterviewStats();
   const completed = completedUserInterviews();
-  const existing = allStats[user?.email] ?? { totalCompleted: 0, events: [] };
-  const eventIds = new Set((existing.events ?? []).map((event) => event.interviewId));
-  const backfilledEvents = completed
-    .filter((interview) => !eventIds.has(interview.id))
-    .map((interview) => ({
+  const completedIds = new Set(completed.map((interview) => interview.id));
+  const existingById = new Map((allStats[user.email]?.events ?? [])
+    .filter((event) => completedIds.has(event.interviewId))
+    .map((event) => [event.interviewId, event]));
+  const events = completed.map((interview) => {
+    const existing = existingById.get(interview.id);
+    return {
       interviewId: interview.id,
-      completedAt: interview.completedAt ?? interview.createdAt ?? new Date().toISOString(),
-    }));
+      completedAt: existing?.completedAt ?? interview.completedAt ?? interview.createdAt ?? new Date().toISOString(),
+    };
+  });
   const nextStats = {
-    totalCompleted: Math.max(existing.totalCompleted ?? 0, completed.length),
-    events: [...(existing.events ?? []), ...backfilledEvents],
+    totalCompleted: events.length,
+    events,
   };
 
-  if (user?.email && backfilledEvents.length > 0) {
-    allStats[user.email] = nextStats;
-    writeInterviewStats(allStats);
-  }
+  allStats[user.email] = nextStats;
+  writeInterviewStats(allStats);
 
   return nextStats;
 }
@@ -182,15 +194,16 @@ function recordCompletedInterview(interview) {
   const events = stats.events ?? [];
 
   if (!events.some((event) => event.interviewId === interview.id)) {
+    const nextEvents = [
+      ...events,
+      {
+        interviewId: interview.id,
+        completedAt: interview.completedAt ?? new Date().toISOString(),
+      },
+    ];
     allStats[user.email] = {
-      totalCompleted: Math.max(stats.totalCompleted ?? 0, events.length) + 1,
-      events: [
-        ...events,
-        {
-          interviewId: interview.id,
-          completedAt: interview.completedAt ?? new Date().toISOString(),
-        },
-      ],
+      totalCompleted: nextEvents.length,
+      events: nextEvents,
     };
     writeInterviewStats(allStats);
   }
@@ -441,7 +454,7 @@ function lastSevenDays() {
     date.setHours(0, 0, 0, 0);
     date.setDate(date.getDate() - offset);
     days.push({
-      key: date.toISOString().slice(0, 10),
+      key: dateKey(date),
       day: formatter.format(date),
       skills: 0,
       assessments: 0,
@@ -932,9 +945,11 @@ export function useGetDashboardSummary(options) {
       return {
         totalJobs: jobs.length,
         activeJobs: jobs.filter((job) => job.status === "in_progress").length,
+        activePreparationJobs: jobs.filter((job) => job.status !== "completed").length,
         completedJobs: jobs.filter((job) => job.status === "completed").length,
         totalSkills: skills.length,
         completedSkills,
+        remainingSkills: Math.max(0, skills.length - completedSkills),
         completionPercentage,
         upcomingDeadlines: jobs.filter((job) => daysUntil(job.deadline) <= 7).length,
         streak: jobs.length ? 1 : 0,
@@ -959,7 +974,7 @@ export function useGetWeeklyProgress(options) {
       jobs.forEach((job) => {
         job.roadmapPhases?.forEach((phase) => {
           phase.skills.forEach((skill) => {
-            const completedDate = skill.completedAt?.slice(0, 10);
+            const completedDate = dateKey(skill.completedAt);
             if (skill.completed && byDate.has(completedDate)) {
               byDate.get(completedDate).skills += 1;
             }
@@ -968,14 +983,14 @@ export function useGetWeeklyProgress(options) {
       });
 
       getUserInterviewStats().events?.forEach((event) => {
-        const completedDate = event.completedAt?.slice(0, 10);
+        const completedDate = dateKey(event.completedAt);
         if (byDate.has(completedDate)) {
           byDate.get(completedDate).interviews += 1;
         }
       });
 
       userCrtResults().forEach((test) => {
-        const completedDate = test.completedAt?.slice(0, 10);
+        const completedDate = dateKey(test.completedAt ?? test.createdAt ?? test.id);
         if (byDate.has(completedDate)) {
           byDate.get(completedDate).assessments += 1;
         }
@@ -993,14 +1008,15 @@ export function useGetSkillBreakdown(options) {
     queryFn: async () => {
       await syncServerJobs();
       const jobs = userJobs();
-      const completedSkills = jobs
-        .flatMap((job) => job.roadmapPhases?.flatMap((phase) => phase.skills) ?? [])
-        .filter((skill) => skill.completed).length;
+      const skills = jobs.flatMap((job) => job.roadmapPhases?.flatMap((phase) => phase.skills) ?? []);
+      const completedSkills = skills.filter((skill) => skill.completed).length;
+      const remainingSkills = Math.max(0, skills.length - completedSkills);
       const completedTests = userCrtResults().length;
       const completedInterviews = getUserInterviewStats().totalCompleted ?? 0;
 
       return [
         { category: "Skills Completed", count: completedSkills, color: "#0ea5e9" },
+        { category: "Skills Remaining", count: remainingSkills, color: "#94a3b8" },
         { category: "Tests Done", count: completedTests, color: "#f97316" },
         { category: "Interviews Done", count: completedInterviews, color: "#10b981" },
       ]
@@ -1030,7 +1046,11 @@ export function useGetUpcomingTasks(options) {
                 priority: "high",
               }]
             : [];
-          const skills = (job.roadmapPhases?.[0]?.skills ?? []).slice(0, 2).map((skill) => ({
+          const skills = (job.roadmapPhases ?? [])
+            .flatMap((phase) => phase.skills ?? [])
+            .filter((skill) => !skill.completed)
+            .slice(0, 3)
+            .map((skill) => ({
             id: `${job.id}-${skill.id}`,
             type: "skill",
             title: skill.name,

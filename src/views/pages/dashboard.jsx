@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "wouter";
-import { AlertTriangle, Briefcase, CheckCircle, Target, Mic, Trophy, Clock, ArrowRight, TrendingUp } from "lucide-react";
+import { AlertTriangle, CheckCircle, Target, Mic, Trophy, Clock, ArrowRight, TrendingUp, BookOpen } from "lucide-react";
 import { AppLayout } from "@/components/layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
-import { useGetDashboardSummary, useGetWeeklyProgress, useGetSkillBreakdown, useGetUpcomingTasks, getGetDashboardSummaryQueryKey, getGetWeeklyProgressQueryKey, getGetSkillBreakdownQueryKey, getGetUpcomingTasksQueryKey } from "@/api";
+import { useGetDashboardSummary, useGetWeeklyProgress, useGetSkillBreakdown, useGetUpcomingTasks, useListJobs, getGetDashboardSummaryQueryKey, getGetWeeklyProgressQueryKey, getGetSkillBreakdownQueryKey, getGetUpcomingTasksQueryKey, getListJobsQueryKey } from "@/api";
 import { useAuth } from "@/lib/auth-context";
 const priorityColor = { high: "destructive", medium: "default", low: "secondary" };
 const typeIcon = { skill: CheckCircle, interview: Mic, crt: Trophy, deadline: Clock };
@@ -18,25 +18,27 @@ export default function DashboardPage() {
     const weekly = useGetWeeklyProgress({ query: { queryKey: getGetWeeklyProgressQueryKey() } });
     const breakdown = useGetSkillBreakdown({ query: { queryKey: getGetSkillBreakdownQueryKey() } });
     const tasks = useGetUpcomingTasks({ query: { queryKey: getGetUpcomingTasksQueryKey() } });
+    const jobs = useListJobs({ query: { queryKey: getListJobsQueryKey() } });
     const reminders = (tasks.data ?? []).filter(task => task.type === "deadline");
     const chartTextColor = "hsl(var(--foreground))";
     const hasStarted = (summary.data?.totalJobs ?? 0) > 0;
-    const weeklyTotals = (weekly.data ?? []).reduce((totals, day) => ({
+    const weeklyData = weekly.data ?? [];
+    const weeklyTotals = weeklyData.reduce((totals, day) => ({
         skills: totals.skills + (day.skills ?? 0),
         assessments: totals.assessments + (day.assessments ?? 0),
         interviews: totals.interviews + (day.interviews ?? 0),
     }), { skills: 0, assessments: 0, interviews: 0 });
-    const weeklyTotalProgress = weeklyTotals.skills + weeklyTotals.assessments + weeklyTotals.interviews;
+    const weeklyActivityTotal = weeklyTotals.skills + weeklyTotals.assessments + weeklyTotals.interviews;
     const weeklyReport = [
         { label: "Weekly Skills", value: weeklyTotals.skills, color: "bg-primary" },
         { label: "Weekly Tests", value: weeklyTotals.assessments, color: "bg-accent" },
         { label: "Weekly Interviews", value: weeklyTotals.interviews, color: "bg-emerald-500" },
     ];
     const stats = [
-        { label: "Active Jobs", value: summary.data?.activeJobs ?? 0, icon: Briefcase, color: "text-primary" },
         { label: "Skills Completed", value: summary.data?.completedSkills ?? 0, icon: CheckCircle, color: "text-green-500" },
         { label: "Tests Done", value: summary.data?.testsCompleted ?? 0, icon: Trophy, color: "text-orange-500" },
-        { label: "Interviews Done", value: summary.data?.interviewsCompleted ?? 0, icon: Mic, color: "text-accent" },
+        { label: "Interviews Done", value: summary.data?.interviewsCompleted ?? 0, icon: Mic, color: "text-emerald-500" },
+        { label: "Overall Progress", value: `${summary.data?.completionPercentage ?? 0}%`, icon: BookOpen, color: "text-primary" },
     ];
     return (<AppLayout>
       <div className="p-6 max-w-7xl mx-auto space-y-6">
@@ -109,6 +111,39 @@ export default function DashboardPage() {
             </motion.div>))}
         </div>}
 
+        {hasStarted && (<Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <BookOpen className="w-4 h-4 text-primary"/> Roadmap Progress
+            </CardTitle>
+            <Link href="/jobs">
+              <Button variant="ghost" size="sm" className="text-xs gap-1">
+                Manage jobs <ArrowRight className="w-3 h-3"/>
+              </Button>
+            </Link>
+          </CardHeader>
+          <CardContent>
+            {jobs.isLoading ? (<div className="space-y-3">{Array(3).fill(0).map((_, i) => <Skeleton key={i} className="h-16 rounded-lg"/>)}</div>) : (<div className="space-y-3">
+              {(jobs.data ?? []).slice(0, 4).map((job) => (<div key={job.id} className="rounded-lg border border-border p-3">
+                  <div className="mb-2 flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">{job.title}</p>
+                      <p className="text-xs text-muted-foreground">{job.completedSkills ?? 0} of {job.totalSkills ?? 0} skills completed</p>
+                    </div>
+                    <Link href={`/roadmap/${job.id}`}>
+                      <Button variant="outline" size="sm" className="h-8 shrink-0">Continue</Button>
+                    </Link>
+                  </div>
+                  <Progress value={job.completionPercentage ?? 0} className="h-2"/>
+                  <div className="mt-1 flex justify-between text-xs text-muted-foreground">
+                    <span>{job.completionPercentage ?? 0}% complete</span>
+                    <span className="capitalize">{job.status?.replace("_", " ")}</span>
+                  </div>
+                </div>))}
+            </div>)}
+          </CardContent>
+        </Card>)}
+
         {hasStarted && reminders.length > 0 && (<Card className="border-red-500/40 bg-red-500/10">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold flex items-center gap-2 text-red-600 dark:text-red-300">
@@ -140,11 +175,11 @@ export default function DashboardPage() {
                 <div className="rounded-lg border border-border bg-muted/20 p-3">
                   <div className="mb-3 flex items-center justify-between gap-3">
                     <p className="text-sm font-medium">Weekly Progress Report</p>
-                    <p className="text-xs text-muted-foreground">Last 7 days · {weeklyTotalProgress} total</p>
+                    <p className="text-xs text-muted-foreground">Last 7 days · {weeklyActivityTotal} activities</p>
                   </div>
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                     {weeklyReport.map(item => {
-                      const percent = weeklyTotalProgress ? Math.round((item.value / weeklyTotalProgress) * 100) : 0;
+                      const percent = weeklyActivityTotal ? Math.round((item.value / weeklyActivityTotal) * 100) : 0;
                       return (<div key={item.label} className="rounded-md border border-border bg-background/60 px-3 py-2">
                         <div className="mb-1 flex items-center gap-2">
                           <span className={`h-2 w-2 rounded-full ${item.color}`}/>
@@ -158,11 +193,11 @@ export default function DashboardPage() {
                     })}
                   </div>
                 </div>
-                {weeklyTotalProgress === 0 ? (<div className="h-40 flex flex-col items-center justify-center gap-2 text-center text-sm text-muted-foreground">
+                {weeklyActivityTotal === 0 ? (<div className="h-40 flex flex-col items-center justify-center gap-2 text-center text-sm text-muted-foreground">
                   <p className="font-medium text-foreground">No weekly progress yet</p>
                   <p>Complete a skill, test, or interview this week.</p>
                 </div>) : (<ResponsiveContainer width="100%" height={160}>
-                  <BarChart data={weekly.data ?? []} barSize={8} barGap={2}>
+                  <BarChart data={weeklyData} barSize={8} barGap={2}>
                     <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: chartTextColor }}/>
                     <YAxis hide/>
                     <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12, color: chartTextColor }} labelStyle={{ color: chartTextColor }} itemStyle={{ color: chartTextColor }}/>
