@@ -3,62 +3,144 @@ const SKILL_CATALOG = [
   "Java",
   "C++",
   "C#",
+  "Go",
+  "Rust",
+  "PHP",
+  "Ruby",
+  "Kotlin",
+  "Swift",
   "React",
+  "Next.js",
   "Angular",
   "Vue",
+  "Redux",
   "JavaScript",
   "TypeScript",
   "Node.js",
   "Express",
+  "FastAPI",
   "Django",
   "Flask",
   "Spring Boot",
+  "Hibernate",
+  "Microservices",
   "REST APIs",
   "GraphQL",
+  "JSON",
+  "OAuth",
+  "JWT",
   "SQL",
   "MySQL",
   "PostgreSQL",
   "MongoDB",
+  "NoSQL",
+  "Oracle",
+  "SQLite",
   "Redis",
   "AWS",
   "Azure",
+  "GCP",
+  "Firebase",
   "Docker",
   "Kubernetes",
+  "Terraform",
   "CI/CD",
+  "Jenkins",
+  "GitHub Actions",
   "HTML",
   "CSS",
   "Tailwind CSS",
+  "Bootstrap",
+  "Material UI",
+  "Sass",
   "Git",
   "Linux",
+  "Postman",
   "Testing",
   "Jest",
   "Cypress",
+  "Playwright",
+  "Selenium",
+  "PyTest",
   "Data Structures",
   "Algorithms",
+  "OOP",
+  "DBMS",
   "System Design",
   "Machine Learning",
+  "Deep Learning",
+  "NLP",
+  "LLMs",
+  "LangChain",
+  "TensorFlow",
+  "PyTorch",
+  "Pandas",
+  "NumPy",
   "Data Analysis",
   "Excel",
   "Power BI",
+  "Tableau",
+  "Agile",
+  "Scrum",
+  "Jira",
+  "Figma",
+  "UI/UX",
+  "Android",
+  "React Native",
+  "Flutter",
   "Communication",
   "Problem Solving",
 ];
 
 const SKILL_ALIASES = {
-  "REST APIs": ["rest api", "restful api", "api development", "apis"],
+  "REST APIs": ["rest api", "restful api", "restful services", "api development", "apis"],
   "Node.js": ["nodejs", "node js"],
+  "Next.js": ["nextjs", "next js"],
+  "FastAPI": ["fast api"],
   "Tailwind CSS": ["tailwind"],
+  "Material UI": ["mui", "material-ui"],
+  "GitHub Actions": ["github actions", "gh actions"],
+  "GCP": ["google cloud", "google cloud platform"],
+  "OAuth": ["oauth2", "oauth 2.0"],
+  "JWT": ["json web token", "json web tokens"],
   "Data Structures": ["data structure", "dsa"],
+  OOP: ["object oriented programming", "object-oriented programming"],
   "System Design": ["distributed systems", "architecture"],
-  "Machine Learning": ["ml", "model training"],
+  "Machine Learning": ["ml", "model training", "predictive modeling"],
+  "Deep Learning": ["neural networks"],
+  LLMs: ["llm", "large language models", "generative ai", "genai"],
   "Data Analysis": ["data analytics", "analytics"],
   "Power BI": ["powerbi"],
   "CI/CD": ["ci cd", "continuous integration", "continuous delivery", "devops pipeline"],
   Testing: ["unit testing", "integration testing", "test automation"],
+  Communication: ["verbal communication", "written communication", "presentation skills"],
+  "Problem Solving": ["analytical skills", "troubleshooting"],
 };
+
+const EXPLICIT_TERM_STOPWORDS = /^(The|This|We|You|Our|Job|Role|Candidate|Responsibilities|Requirements|Skills|Review|Work|Experience|Qualifications|Preferred|Must Have|Good To Have|About|Team|Company|Bachelor|Degree|Years|Location|Salary|Benefits)$/i;
+const SKILL_MARKER = /(?:\+\+|#|\.js\b|api\b|sql\b|db\b|ui\/ux|ci\/cd|llm|nlp|aws|gcp|azure|react|node|java|python|docker|kubernetes|spring|mongo|redis|git|figma|jira)/i;
+const ACRONYM = /^[A-Z][A-Z0-9+#./-]{1,}$/;
 
 function escapeRegex(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function normalizeText(value) {
+  return String(value || "")
+    .replace(/[•·●▪]/g, "\n")
+    .replace(/[–—]/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function uniqueSkills(skills) {
+  const seen = new Set();
+  return skills.filter((skill) => {
+    const key = skill.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 export function daysUntil(deadline) {
@@ -69,20 +151,25 @@ export function daysUntil(deadline) {
 }
 
 export function extractSkills(description) {
-  const text = description.toLowerCase();
+  const normalized = normalizeText(description);
+  const text = normalized.toLowerCase();
   const catalogMatches = SKILL_CATALOG.filter((skill) => {
     const terms = [skill, ...(SKILL_ALIASES[skill] ?? [])];
     return terms.some((term) => new RegExp(`(^|[^a-z0-9+#.])${escapeRegex(term)}([^a-z0-9+#.]|$)`, "i").test(text));
   });
-  const requiredSection = description
-    .split(/\b(requirements|skills|qualifications|must have|preferred|responsibilities)\b/i)
+  const requiredSection = normalized
+    .split(/\b(requirements|required skills|technical skills|skills|qualifications|must have|good to have|preferred|responsibilities|requirements and skills)\b/i)
     .slice(1)
     .join(" ");
-  const explicitTerms = Array.from((requiredSection || description).matchAll(/\b[A-Z][A-Za-z+#.]{1,}(?:\s[A-Z][A-Za-z+#.]{1,}){0,2}\b/g))
+  const explicitTerms = Array.from((requiredSection || normalized).matchAll(/\b[A-Z][A-Za-z0-9+#./-]{1,}(?:\s[A-Z][A-Za-z0-9+#./-]{1,}){0,2}\b/g))
     .map((match) => match[0].trim())
-    .filter((term) => term.length > 2 && !/^(The|This|We|You|Our|Job|Role|Candidate|Responsibilities|Requirements|Skills)$/i.test(term));
+    .filter((term) =>
+      term.length > 2 &&
+      !EXPLICIT_TERM_STOPWORDS.test(term) &&
+      (SKILL_MARKER.test(term) || ACRONYM.test(term)),
+    );
 
-  return [...new Set([...catalogMatches, ...explicitTerms])].slice(0, 12);
+  return uniqueSkills([...catalogMatches, ...explicitTerms]).slice(0, 14);
 }
 
 export function difficultyFor(skills, description) {

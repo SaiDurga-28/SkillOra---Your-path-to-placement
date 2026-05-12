@@ -1,4 +1,4 @@
-import { analyzeJobLocally } from "./skill-engine.service.js";
+import { analyzeJobLocally, buildRoadmap, daysUntil, difficultyFor, extractSkills } from "./skill-engine.service.js";
 
 function getAiConfig() {
   if (process.env.OPENAI_API_KEY) {
@@ -31,15 +31,74 @@ function getAiConfig() {
   return null;
 }
 
+function getVisionAiConfig() {
+  if (process.env.OPENAI_API_KEY) {
+    return {
+      provider: "openai",
+      apiKey: process.env.OPENAI_API_KEY,
+      baseUrl: process.env.OPENAI_BASE_URL || "https://api.openai.com/v1",
+      model: process.env.OPENAI_VISION_MODEL || process.env.OPENAI_MODEL || "gpt-4o-mini",
+      endpoint: "responses",
+    };
+  }
+
+  if (process.env.GROQ_API_KEY && process.env.GROQ_VISION_MODEL) {
+    return {
+      provider: "groq",
+      apiKey: process.env.GROQ_API_KEY,
+      baseUrl: process.env.GROQ_BASE_URL || "https://api.groq.com/openai/v1",
+      model: process.env.GROQ_VISION_MODEL,
+      endpoint: "chat/completions",
+    };
+  }
+
+  if (process.env.XAI_API_KEY) {
+    return {
+      provider: "xai",
+      apiKey: process.env.XAI_API_KEY,
+      baseUrl: process.env.XAI_BASE_URL || "https://api.x.ai/v1",
+      model: process.env.XAI_VISION_MODEL || process.env.XAI_MODEL || "grok-4-fast",
+      endpoint: "chat/completions",
+    };
+  }
+
+  if (process.env.GROQ_API_KEY) {
+    return {
+      provider: "groq",
+      apiKey: process.env.GROQ_API_KEY,
+      baseUrl: process.env.GROQ_BASE_URL || "https://api.groq.com/openai/v1",
+      model: "meta-llama/llama-4-scout-17b-16e-instruct",
+      endpoint: "chat/completions",
+    };
+  }
+
+  return null;
+}
+
 function extractTextFromResponse(data) {
   const chatText = data.choices?.[0]?.message?.content;
   if (typeof chatText === "string") return chatText;
+  if (Array.isArray(chatText)) {
+    return chatText.map((content) => content.text ?? "").join("");
+  }
   if (typeof data.output_text === "string") return data.output_text;
   const text = data.output
     ?.flatMap((item) => item.content ?? [])
     ?.map((content) => content.text ?? "")
     ?.join("");
   return text || "";
+}
+
+async function readErrorMessage(response) {
+  const text = await response.text().catch(() => "");
+  if (!text) return `${response.status} ${response.statusText}`.trim();
+
+  try {
+    const body = JSON.parse(text);
+    return body.error?.message || body.message || text.slice(0, 300);
+  } catch {
+    return text.slice(0, 300);
+  }
 }
 
 function parseJsonText(text) {
@@ -95,12 +154,12 @@ async function callAiJson(system, payload, fallback) {
 
 export async function analyzeJobWithAi(payload) {
   const ai = getAiConfig();
-  const fallback = analyzeJobLocally(payload);
-  if (!ai) return fallback;
+  const fallback = () => analyzeJobLocally(payload);
+  if (!ai) return fallback();
 
   const usesChatCompletions = ai.provider === "xai" || ai.provider === "groq";
   const system =
-    "You analyze job descriptions. Return only valid JSON with extractedSkills, difficulty, estimatedDays, roadmapPhases. Use only skills clearly present in the JD.";
+    "You analyze job descriptions. Return only valid JSON with extractedSkills, difficulty, estimatedDays, roadmapPhases. Extract concrete skills, tools, technologies, frameworks, platforms, methods, and important soft skills explicitly present in the JD requirements/responsibilities. Do not include generic headings, company names, benefits, locations, or instructions. Keep extractedSkills as concise canonical names such as React, Node.js, SQL, AWS, Communication.";
 
   try {
     const response = await fetch(`${ai.baseUrl}/${usesChatCompletions ? "chat/completions" : "responses"}`, {
@@ -112,27 +171,117 @@ export async function analyzeJobWithAi(payload) {
       body: JSON.stringify(usesChatCompletions ? buildChatCompletionBody(ai, system, payload) : buildResponsesBody(ai, system, payload)),
     });
 
-    if (!response.ok) return fallback;
+    if (!response.ok) return fallback();
 
     const data = await response.json();
     const text = extractTextFromResponse(data).trim();
     const parsed = parseJsonText(text);
 
+    const localSkills = extractSkills(payload.description ?? "");
+    const aiSkills = Array.isArray(parsed.extractedSkills)
+      ? parsed.extractedSkills.map((skill) => String(skill).trim()).filter(Boolean)
+      : [];
+    const extractedSkills = [...new Set([...localSkills, ...aiSkills])].slice(0, 14);
+    if (extractedSkills.length === 0) return fallback();
+
+    const parsedDays = Number(parsed.estimatedDays);
+    const estimatedDays = Number.isFinite(parsedDays) && parsedDays > 0
+      ? parsedDays
+      : daysUntil(payload.deadline);
+    const parsedDifficulty = String(parsed.difficulty || "").toLowerCase();
+    const difficulty = ["beginner", "intermediate", "advanced"].includes(parsedDifficulty)
+      ? parsedDifficulty
+      : difficultyFor(extractedSkills, payload.description ?? "");
+
     return {
-      extractedSkills: Array.isArray(parsed.extractedSkills) && parsed.extractedSkills.length ? parsed.extractedSkills.slice(0, 12) : fallback.extractedSkills,
-      estimatedDays: Number.isFinite(parsed.estimatedDays) ? parsed.estimatedDays : fallback.estimatedDays,
-      difficulty: parsed.difficulty || fallback.difficulty,
-      roadmapPhases: fallback.roadmapPhases,
+      extractedSkills,
+      estimatedDays,
+      difficulty,
+      roadmapPhases: buildRoadmap(extractedSkills, estimatedDays),
       analysisSource: `${ai.provider}:${ai.model}`,
     };
   } catch {
-    return fallback;
+    return fallback();
   }
+}
+
+export async function extractJobDescriptionFromImage(payload) {
+  const ai = getVisionAiConfig();
+  if (!ai) {
+    throw new Error("Image JD extraction needs an AI API key on the backend.");
+  }
+
+  const imageDataUrl = String(payload.imageDataUrl || "");
+  if (!imageDataUrl.startsWith("data:image/")) {
+    throw new Error("Upload a valid image file.");
+  }
+
+  const system = "Extract the job description text from this image. Return only the readable text in the same order. Do not summarize, infer, add skills, or explain.";
+  const responseBody = ai.endpoint === "responses"
+    ? {
+        model: ai.model,
+        input: [
+          {
+            role: "system",
+            content: system,
+          },
+          {
+            role: "user",
+            content: [
+              { type: "input_text", text: "Read this job description image and extract all visible text." },
+              { type: "input_image", image_url: imageDataUrl },
+            ],
+          },
+        ],
+      }
+    : {
+        model: ai.model,
+        messages: [
+          { role: "system", content: system },
+          {
+            role: "user",
+            content: [
+              { type: "text", text: "Read this job description image and extract all visible text." },
+              { type: "image_url", image_url: { url: imageDataUrl } },
+            ],
+          },
+        ],
+      };
+
+  const response = await fetch(`${ai.baseUrl}/${ai.endpoint}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${ai.apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(responseBody),
+  });
+
+  if (!response.ok) {
+    const detail = await readErrorMessage(response);
+    throw new Error(`Image JD extraction failed with ${ai.provider} (${ai.model}): ${detail}`);
+  }
+
+  const data = await response.json();
+  const text = extractTextFromResponse(data).replace(/\s+/g, " ").trim();
+  if (text.length < 80) {
+    throw new Error(`Could not read enough text from this image using ${ai.provider} (${ai.model}).`);
+  }
+
+  return { description: text };
 }
 
 export function getAiStatus() {
   const ai = getAiConfig();
-  return ai ? { enabled: true, provider: ai.provider, model: ai.model } : { enabled: false, provider: "local", model: "fallback" };
+  const vision = getVisionAiConfig();
+  return {
+    enabled: Boolean(ai),
+    provider: ai?.provider ?? "local",
+    model: ai?.model ?? "fallback",
+    visionEnabled: Boolean(vision),
+    visionProvider: vision?.provider ?? "none",
+    visionModel: vision?.model ?? "none",
+  };
 }
 
 export async function generateAssessmentQuestionsWithAi(payload, fallback) {

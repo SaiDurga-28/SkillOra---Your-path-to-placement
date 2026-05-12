@@ -34,6 +34,35 @@ const schema = z.object({
     }, "This does not look like a valid job description. Add role details, responsibilities, required skills, and qualifications."),
     deadline: z.string().min(1, "Preparation deadline is required"),
 });
+
+function extractPdfText(buffer) {
+    const bytes = new Uint8Array(buffer);
+    let binary = "";
+    for (let index = 0; index < bytes.length; index += 1) {
+        binary += String.fromCharCode(bytes[index]);
+    }
+
+    const strings = [];
+    const textMatches = binary.matchAll(/\(([^()]|\\[()\\nrtbf]){2,}\)/g);
+    for (const match of textMatches) {
+        strings.push(match[0].slice(1, -1).replace(/\\n/g, " ").replace(/\\r/g, " ").replace(/\\t/g, " ").replace(/\\([()\\])/g, "$1"));
+    }
+
+    const tjMatches = binary.matchAll(/<([0-9A-Fa-f]{4,})>/g);
+    for (const match of tjMatches) {
+        const hex = match[1];
+        if (hex.length % 4 !== 0) continue;
+        const chars = [];
+        for (let index = 0; index < hex.length; index += 4) {
+            const code = parseInt(hex.slice(index, index + 4), 16);
+            if (code >= 32 && code <= 126) chars.push(String.fromCharCode(code));
+        }
+        if (chars.length > 2) strings.push(chars.join(""));
+    }
+
+    return strings.join(" ").replace(/\s+/g, " ").trim();
+}
+
 export default function UploadPage() {
     const [, setLocation] = useLocation();
     const { toast } = useToast();
@@ -43,40 +72,146 @@ export default function UploadPage() {
     const [result, setResult] = useState(null);
     const [inputMode, setInputMode] = useState("type");
     const [fileName, setFileName] = useState("");
+    const [extractingImage, setExtractingImage] = useState(false);
     const form = useForm({
         resolver: zodResolver(schema),
         defaultValues: { title: "", company: "", description: "", deadline: "" },
     });
-    const descriptionFromFile = (file, text = "") => {
-        const title = form.getValues("title") || "Uploaded job role";
-        const company = form.getValues("company") || "the selected company";
+    const applyExtractedDescription = (file, text) => {
         const readableText = text.trim();
-        if (readableText.length > 80) {
-            return readableText;
-        }
-        return `${title} at ${company}. Job description uploaded from ${file.name}. The role requires a candidate with relevant job-specific abilities, experience, responsibilities, qualifications, and work readiness. Review this uploaded file and type the exact technologies or required skills from the JD here before analysis.`;
-    };
-    const loadDescriptionFile = (file) => {
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            form.setValue("description", descriptionFromFile(file, String(ev.target?.result ?? "")), { shouldValidate: true, shouldDirty: true });
-            setFileName(file.name);
-            setInputMode("file");
-        };
-        reader.onerror = () => {
-            form.setValue("description", descriptionFromFile(file), { shouldValidate: true, shouldDirty: true });
-            setFileName(file.name);
-            setInputMode("file");
-            toast({ title: "File attached", description: "This file could not be read as text, so a draft description was created. Add details if needed." });
-        };
-        if (file.type.startsWith("image/")) {
-            form.setValue("description", descriptionFromFile(file), { shouldValidate: true, shouldDirty: true });
-            setFileName(file.name);
-            setInputMode("file");
-            toast({ title: "Photo attached", description: "Image OCR needs a backend service, so a draft description was created from the upload." });
+        if (readableText.length < 120) {
+            toast({
+                title: "Could not read enough JD text",
+                description: "Upload a text-based PDF/TXT file or paste the job description text before analysis.",
+                variant: "destructive",
+            });
             return;
         }
+
+        form.setValue("description", readableText, { shouldValidate: true, shouldDirty: true });
+        setFileName(file.name);
+        setInputMode("file");
+    };
+
+    const fileToDataUrl = (file) => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result ?? ""));
+        reader.onerror = () => reject(new Error("Could not read image file."));
+        reader.readAsDataURL(file);
+    });
+
+    const imageFileToDataUrl = async (file) => {
+        const originalDataUrl = await fileToDataUrl(file);
+        const image = await new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = () => reject(new Error("Could not load image file."));
+            img.src = originalDataUrl;
+        });
+
+        const maxSide = 1800;
+        const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
+        const width = Math.max(1, Math.round(image.width * scale));
+        const height = Math.max(1, Math.round(image.height * scale));
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const context = canvas.getContext("2d");
+        if (!context) return originalDataUrl;
+
+        context.drawImage(image, 0, 0, width, height);
+        const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.85);
+        return compressedDataUrl.length < originalDataUrl.length ? compressedDataUrl : originalDataUrl;
+    };
+
+    const extractImageDescription = async (file) => {
+        setExtractingImage(true);
+        try {
+            const imageDataUrl = await imageFileToDataUrl(file);
+            if (imageDataUrl.length > 14_000_000) {
+                throw new Error("Image file is too large. Crop the JD area or upload a smaller screenshot.");
+            }
+            const urls = ["/api/jobs/extract-image"];
+            if (typeof window !== "undefined" && window.location.port !== "3001") {
+                urls.push("http://127.0.0.1:3001/api/jobs/extract-image");
+            }
+
+            let lastError = null;
+            let sawBackend = false;
+            for (const url of urls) {
+                try {
+                    const response = await fetch(url, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ imageDataUrl }),
+                    });
+                    sawBackend = true;
+                    const body = await response.json().catch(() => null);
+                    if (!response.ok) throw new Error(body?.message ?? "Image extraction failed.");
+                    applyExtractedDescription(file, body?.description ?? "");
+                    toast({ title: "Image text extracted", description: "Review the JD text, then generate the roadmap." });
+                    return;
+                } catch (error) {
+                    lastError = error;
+                    if (!/Failed to fetch|NetworkError|Load failed/i.test(error.message ?? "")) break;
+                }
+            }
+
+            if (!sawBackend && lastError) {
+                throw new Error("API server is not running. Start it with npm run dev:api, then upload the image again.");
+            }
+
+            throw lastError ?? new Error("Image extraction failed.");
+        } catch (error) {
+            toast({
+                title: error.message?.includes("API server is not running") ? "API server is not running" : "Image could not be read",
+                description: error.message || "Paste the JD text or upload a text-based PDF/TXT file.",
+                variant: "destructive",
+            });
+        } finally {
+            setExtractingImage(false);
+        }
+    };
+
+    const loadDescriptionFile = async (file) => {
+        if (!file) return;
+        const fileNameLower = file.name.toLowerCase();
+        if (file.type.startsWith("image/")) {
+            await extractImageDescription(file);
+            return;
+        }
+        if (file.type === "application/pdf" || fileNameLower.endsWith(".pdf")) {
+            const buffer = await file.arrayBuffer();
+            applyExtractedDescription(file, extractPdfText(buffer));
+            return;
+        }
+        if (fileNameLower.endsWith(".doc") || fileNameLower.endsWith(".docx")) {
+            toast({
+                title: "Word file is not supported yet",
+                description: "Export the JD as PDF/TXT or paste the JD text for accurate skill extraction.",
+                variant: "destructive",
+            });
+            return;
+        }
+        if (!file.type.startsWith("text/") && !/\.(txt|md|csv)$/i.test(file.name)) {
+            toast({
+                title: "Unsupported file type",
+                description: "Upload an image, text-based PDF, TXT file, or paste the JD text.",
+                variant: "destructive",
+            });
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            applyExtractedDescription(file, String(ev.target?.result ?? ""));
+        };
+        reader.onerror = () => {
+            toast({
+                title: "File could not be read",
+                description: "Paste the JD text or upload a readable PDF/TXT file.",
+                variant: "destructive",
+            });
+        };
         reader.readAsText(file);
     };
     const onDrop = (e) => {
@@ -169,11 +304,13 @@ export default function UploadPage() {
                           {inputMode === "file" && (<div className="rounded-xl border border-border bg-muted/30 p-4">
                             <Input
                               type="file"
-                              accept="*/*"
+                              accept="image/*,application/pdf,.pdf,text/plain,.txt,.md,.csv"
                               onChange={(event) => loadDescriptionFile(event.target.files?.[0])}
+                              disabled={extractingImage}
                               data-testid="input-job-file"
                             />
                             {fileName && <p className="mt-2 text-xs text-muted-foreground">Loaded {fileName}</p>}
+                            {extractingImage && <p className="mt-2 text-xs text-muted-foreground">Reading image text...</p>}
                           </div>)}
                           <div className={`relative border-2 border-dashed rounded-xl p-3 transition-colors ${dragOver ? "border-primary bg-primary/5" : "border-border"}`} onDragOver={e => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={onDrop}>
                             <FormControl>
@@ -188,8 +325,8 @@ export default function UploadPage() {
                           <FormMessage />
                         </FormItem>)}/>
 
-                      <Button type="submit" className="w-full gap-2" disabled={createJob.isPending} data-testid="button-analyze">
-                        {createJob.isPending ? (<><Loader2 className="w-4 h-4 animate-spin"/> Generating roadmap...</>) : (<><Sparkles className="w-4 h-4"/> Analyze & Generate Roadmap</>)}
+                      <Button type="submit" className="w-full gap-2" disabled={createJob.isPending || extractingImage} data-testid="button-analyze">
+                        {createJob.isPending || extractingImage ? (<><Loader2 className="w-4 h-4 animate-spin"/> {extractingImage ? "Reading image..." : "Generating roadmap..."}</>) : (<><Sparkles className="w-4 h-4"/> Analyze & Generate Roadmap</>)}
                       </Button>
                     </form>
                   </Form>

@@ -11,59 +11,123 @@ const SKILL_CATALOG = [
   "Java",
   "C++",
   "C#",
+  "Go",
+  "Rust",
+  "PHP",
+  "Ruby",
+  "Kotlin",
+  "Swift",
   "React",
+  "Next.js",
   "Angular",
   "Vue",
+  "Redux",
   "JavaScript",
   "TypeScript",
   "Node.js",
   "Express",
+  "FastAPI",
   "Django",
   "Flask",
   "Spring Boot",
+  "Hibernate",
+  "Microservices",
   "REST APIs",
   "GraphQL",
+  "JSON",
+  "OAuth",
+  "JWT",
   "SQL",
   "MySQL",
   "PostgreSQL",
   "MongoDB",
+  "NoSQL",
+  "Oracle",
+  "SQLite",
   "Redis",
   "AWS",
   "Azure",
+  "GCP",
+  "Firebase",
   "Docker",
   "Kubernetes",
+  "Terraform",
   "CI/CD",
+  "Jenkins",
+  "GitHub Actions",
   "HTML",
   "CSS",
   "Tailwind CSS",
+  "Bootstrap",
+  "Material UI",
+  "Sass",
   "Git",
   "Linux",
+  "Postman",
   "Testing",
   "Jest",
   "Cypress",
+  "Playwright",
+  "Selenium",
+  "PyTest",
   "Data Structures",
   "Algorithms",
+  "OOP",
+  "DBMS",
   "System Design",
   "Machine Learning",
+  "Deep Learning",
+  "NLP",
+  "LLMs",
+  "LangChain",
+  "TensorFlow",
+  "PyTorch",
+  "Pandas",
+  "NumPy",
   "Data Analysis",
   "Excel",
   "Power BI",
+  "Tableau",
+  "Agile",
+  "Scrum",
+  "Jira",
+  "Figma",
+  "UI/UX",
+  "Android",
+  "React Native",
+  "Flutter",
   "Communication",
   "Problem Solving",
 ];
 
 const SKILL_ALIASES = {
-  "REST APIs": ["rest api", "restful api", "api development", "apis"],
+  "REST APIs": ["rest api", "restful api", "restful services", "api development", "apis"],
   "Node.js": ["nodejs", "node js"],
+  "Next.js": ["nextjs", "next js"],
+  "FastAPI": ["fast api"],
   "Tailwind CSS": ["tailwind"],
+  "Material UI": ["mui", "material-ui"],
+  "GitHub Actions": ["github actions", "gh actions"],
+  "GCP": ["google cloud", "google cloud platform"],
+  "OAuth": ["oauth2", "oauth 2.0"],
+  "JWT": ["json web token", "json web tokens"],
   "Data Structures": ["data structure", "dsa"],
+  OOP: ["object oriented programming", "object-oriented programming"],
   "System Design": ["distributed systems", "architecture"],
-  "Machine Learning": ["ml", "model training"],
+  "Machine Learning": ["ml", "model training", "predictive modeling"],
+  "Deep Learning": ["neural networks"],
+  LLMs: ["llm", "large language models", "generative ai", "genai"],
   "Data Analysis": ["data analytics", "analytics"],
   "Power BI": ["powerbi"],
   "CI/CD": ["ci cd", "continuous integration", "continuous delivery", "devops pipeline"],
   Testing: ["unit testing", "integration testing", "test automation"],
+  Communication: ["verbal communication", "written communication", "presentation skills"],
+  "Problem Solving": ["analytical skills", "troubleshooting"],
 };
+
+const EXPLICIT_TERM_STOPWORDS = /^(The|This|We|You|Our|Job|Role|Candidate|Responsibilities|Requirements|Skills|Review|Work|Experience|Qualifications|Preferred|Must Have|Good To Have|About|Team|Company|Bachelor|Degree|Years|Location|Salary|Benefits)$/i;
+const SKILL_MARKER = /(?:\+\+|#|\.js\b|api\b|sql\b|db\b|ui\/ux|ci\/cd|llm|nlp|aws|gcp|azure|react|node|java|python|docker|kubernetes|spring|mongo|redis|git|figma|jira)/i;
+const ACRONYM = /^[A-Z][A-Z0-9+#./-]{1,}$/;
 
 function currentUser() {
   try {
@@ -281,6 +345,14 @@ function saveUserJob(updatedJob) {
   writeJobs(jobs);
 }
 
+function authHeaders(user) {
+  const token = localStorage.getItem("token");
+  return {
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    "X-User-Email": user?.email ?? "",
+  };
+}
+
 async function fetchServerJson(path) {
   const user = currentUser();
   const urls = [path];
@@ -292,9 +364,7 @@ async function fetchServerJson(path) {
   for (const url of urls) {
     try {
       const response = await fetch(url, {
-        headers: {
-          "X-User-Email": user?.email ?? "",
-        },
+        headers: authHeaders(user),
       });
 
       if (!response.ok) {
@@ -326,7 +396,7 @@ async function postServerJson(path, data) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-User-Email": user?.email ?? "",
+          ...authHeaders(user),
         },
         body: JSON.stringify({ ...data, userEmail: user?.email }),
       });
@@ -360,7 +430,7 @@ async function patchServerJson(path, data) {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          "X-User-Email": user?.email ?? "",
+          ...authHeaders(user),
         },
         body: JSON.stringify({ ...data, userEmail: user?.email }),
       });
@@ -392,9 +462,7 @@ async function deleteServerJson(path) {
     try {
       const response = await fetch(url, {
         method: "DELETE",
-        headers: {
-          "X-User-Email": user?.email ?? "",
-        },
+        headers: authHeaders(user),
       });
 
       if (!response.ok) {
@@ -484,22 +552,45 @@ function looksLikeJobDescription(description) {
   return description.trim().length >= 120 && signals.filter((signal) => text.includes(signal)).length >= 3;
 }
 
+function normalizeSkillText(value) {
+  return String(value || "")
+    .replace(/[•·●▪]/g, "\n")
+    .replace(/[–—]/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function uniqueSkills(skills) {
+  const seen = new Set();
+  return skills.filter((skill) => {
+    const key = skill.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 function extractSkills(description) {
-  const text = description.toLowerCase();
+  const normalized = normalizeSkillText(description);
+  const text = normalized.toLowerCase();
   const matches = SKILL_CATALOG.filter((skill) => {
     const terms = [skill, ...(SKILL_ALIASES[skill] ?? [])];
     return terms.some((term) => new RegExp(`(^|[^a-z0-9+#.])${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([^a-z0-9+#.]|$)`, "i").test(text));
   });
-  const requiredSection = description
-    .split(/\b(requirements|skills|qualifications|must have|preferred|responsibilities)\b/i)
+  const requiredSection = normalized
+    .split(/\b(requirements|required skills|technical skills|skills|qualifications|must have|good to have|preferred|responsibilities|requirements and skills)\b/i)
     .slice(1)
     .join(" ");
-  const source = requiredSection || description;
-  const explicitTerms = Array.from(source.matchAll(/\b[A-Z][A-Za-z+#.]{1,}(?:\s[A-Z][A-Za-z+#.]{1,}){0,2}\b/g))
+  const source = requiredSection || normalized;
+  const explicitTerms = Array.from(source.matchAll(/\b[A-Z][A-Za-z0-9+#./-]{1,}(?:\s[A-Z][A-Za-z0-9+#./-]{1,}){0,2}\b/g))
     .map((match) => match[0].trim())
-    .filter((term) => term.length > 2 && !/^(The|This|We|You|Our|Job|Role|Candidate|Responsibilities|Requirements|Skills)$/i.test(term));
+    .filter((term) =>
+      term.length > 2 &&
+      !EXPLICIT_TERM_STOPWORDS.test(term) &&
+      (SKILL_MARKER.test(term) || ACRONYM.test(term)),
+    );
 
-  return [...new Set([...matches, ...explicitTerms])].slice(0, 12);
+  return uniqueSkills([...matches, ...explicitTerms]).slice(0, 14);
 }
 
 function difficultyFor(skills, description) {
@@ -700,7 +791,8 @@ function normalizeRoadmapPhases(job) {
   const skills = Array.isArray(job.extractedSkills) && job.extractedSkills.length
     ? job.extractedSkills
     : extractSkills(job.description ?? "");
-  const estimatedDays = Number.isFinite(Number(job.estimatedDays)) ? Number(job.estimatedDays) : daysUntil(job.deadline);
+  const parsedEstimatedDays = Number(job.estimatedDays);
+  const estimatedDays = Number.isFinite(parsedEstimatedDays) && parsedEstimatedDays > 0 ? parsedEstimatedDays : daysUntil(job.deadline);
   const phases = Array.isArray(job.roadmapPhases) ? job.roadmapPhases : [];
   const hasRenderablePhases = phases.length > 0 && phases.every((phase) =>
     phase &&
@@ -737,8 +829,12 @@ function normalizeJob(job) {
   const extractedSkills = Array.isArray(job.extractedSkills) && job.extractedSkills.length
     ? job.extractedSkills
     : extractSkills(job.description ?? "");
-  const estimatedDays = Number.isFinite(Number(job.estimatedDays)) ? Number(job.estimatedDays) : daysUntil(job.deadline);
-  const difficulty = job.difficulty ?? difficultyFor(extractedSkills, job.description ?? "");
+  const parsedEstimatedDays = Number(job.estimatedDays);
+  const estimatedDays = Number.isFinite(parsedEstimatedDays) && parsedEstimatedDays > 0 ? parsedEstimatedDays : daysUntil(job.deadline);
+  const normalizedDifficulty = String(job.difficulty || "").toLowerCase();
+  const difficulty = ["beginner", "intermediate", "advanced"].includes(normalizedDifficulty)
+    ? normalizedDifficulty
+    : difficultyFor(extractedSkills, job.description ?? "");
 
   return {
     ...job,
@@ -803,9 +899,6 @@ export function useCreateJob() {
       }
 
       const localExtractedSkills = extractSkills(data.description);
-      if (localExtractedSkills.length === 0) {
-        throw new Error("No clear skills were found in this JD. Add the required skills or technologies from the job post and try again.");
-      }
       const localEstimatedDays = daysUntil(data.deadline);
       const localDifficulty = difficultyFor(localExtractedSkills, data.description);
       const fallbackJob = {
@@ -827,7 +920,14 @@ export function useCreateJob() {
       try {
         job = normalizeJob(await postServerJson("/api/jobs/analyze", data));
       } catch (error) {
+        if (localExtractedSkills.length === 0) {
+          throw new Error(error.message || "No clear skills were found in this JD. Add the required skills or technologies from the job post and try again.");
+        }
         if (!isBackendUnavailable(error)) console.warn("Saving job locally because server save failed:", error);
+      }
+
+      if (!Array.isArray(job.extractedSkills) || job.extractedSkills.length === 0) {
+        throw new Error("No clear skills were found in this JD. Add the required skills or technologies from the job post and try again.");
       }
 
       saveUserJob(job);

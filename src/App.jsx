@@ -1,23 +1,24 @@
+import { lazy, Suspense } from "react";
 import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { ThemeProvider } from "@/lib/theme-context";
-import LandingPage from "@/views/pages/landing";
-import LoginPage from "@/views/pages/login";
-import RegisterPage from "@/views/pages/register";
-import DashboardPage from "@/views/pages/dashboard";
-import UploadPage from "@/views/pages/upload";
-import JobsPage from "@/views/pages/jobs";
-import JobDetailPage from "@/views/pages/job-detail";
-import RoadmapPage from "@/views/pages/roadmap";
-import InterviewsPage from "@/views/pages/interviews";
-import InterviewSessionPage from "@/views/pages/interview-session";
-import CrtPage from "@/views/pages/crt";
-import ResumeAnalyzerPage from "@/views/pages/resume-analyzer";
-import SettingsPage from "@/views/pages/settings";
-import NotFound from "@/views/pages/not-found";
+const LandingPage = lazy(() => import("@/views/pages/landing"));
+const LoginPage = lazy(() => import("@/views/pages/login"));
+const RegisterPage = lazy(() => import("@/views/pages/register"));
+const DashboardPage = lazy(() => import("@/views/pages/dashboard"));
+const UploadPage = lazy(() => import("@/views/pages/upload"));
+const JobsPage = lazy(() => import("@/views/pages/jobs"));
+const JobDetailPage = lazy(() => import("@/views/pages/job-detail"));
+const RoadmapPage = lazy(() => import("@/views/pages/roadmap"));
+const InterviewsPage = lazy(() => import("@/views/pages/interviews"));
+const InterviewSessionPage = lazy(() => import("@/views/pages/interview-session"));
+const CrtPage = lazy(() => import("@/views/pages/crt"));
+const ResumeAnalyzerPage = lazy(() => import("@/views/pages/resume-analyzer"));
+const SettingsPage = lazy(() => import("@/views/pages/settings"));
+const NotFound = lazy(() => import("@/views/pages/not-found"));
 const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
@@ -56,7 +57,9 @@ function App() {
         <AuthProvider>
           <TooltipProvider>
             <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-              <Router />
+              <Suspense fallback={<div className="min-h-screen bg-background" />}>
+                <Router />
+              </Suspense>
             </WouterRouter>
             <Toaster />
           </TooltipProvider>

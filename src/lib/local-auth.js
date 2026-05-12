@@ -19,6 +19,11 @@ function createToken() {
   return `local-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
+function authHeaders() {
+  const token = localStorage.getItem("token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 async function postAuth(path, data) {
   const urls = [path];
   if (typeof window !== "undefined" && window.location.port !== "3001") {
@@ -30,7 +35,7 @@ async function postAuth(path, data) {
     try {
       const response = await fetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify(data),
       });
 

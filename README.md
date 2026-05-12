@@ -70,18 +70,22 @@ Update `.env` with your real API keys and MongoDB URI. Do not commit `.env`.
 ```env
 OPENAI_API_KEY=
 OPENAI_MODEL=gpt-5.4-mini
+OPENAI_VISION_MODEL=gpt-4o-mini
 OPENAI_BASE_URL=https://api.openai.com/v1
 
 GROQ_API_KEY=
 GROQ_MODEL=llama-3.3-70b-versatile
+GROQ_VISION_MODEL=meta-llama/llama-4-scout-17b-16e-instruct
 GROQ_BASE_URL=https://api.groq.com/openai/v1
 
 XAI_API_KEY=
 XAI_MODEL=grok-4-fast
+XAI_VISION_MODEL=grok-4-fast
 XAI_BASE_URL=https://api.x.ai/v1
 
 MONGODB_URI=mongodb+srv://<username>:<password>@<cluster-url>/skillora?retryWrites=true&w=majority&appName=Skillora
 MONGODB_DB=skillora
+JWT_SECRET=replace-with-a-long-random-production-secret
 PORT=3001
 ```
 
@@ -89,6 +93,8 @@ Notes:
 
 - If `MONGODB_URI` is set, the API server stores data in MongoDB.
 - If `MONGODB_URI` is empty, the API server falls back to `server/data/skillora-db.json`.
+- Set `JWT_SECRET` to a long random value in production so auth tokens cannot be forged.
+- Image JD extraction uses `OPENAI_VISION_MODEL`, `XAI_VISION_MODEL`, or `GROQ_VISION_MODEL` when configured.
 - Special characters in MongoDB passwords must be URL encoded. For example, `#` becomes `%23`.
 
 ## Run Locally
@@ -122,6 +128,20 @@ Preview the production build:
 
 ```bash
 npm run preview
+```
+
+## Test And Deployment Check
+
+Run the automated test suite:
+
+```bash
+npm test
+```
+
+Run tests and the production build together before deployment:
+
+```bash
+npm run check
 ```
 
 ## Main Routes
